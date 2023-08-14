@@ -1,0 +1,1 @@
+{"version":"1.0.0","name":"taskmanager-server","dependencies":{"dotenv":{"version":"16.3.1"},"express":{"version":"4.18.2"},"mongoose":{"version":"7.3.0"},"morgan":{"version":"1.10.0"}}}

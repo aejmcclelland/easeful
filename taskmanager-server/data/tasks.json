@@ -1,0 +1,71 @@
+[
+  {
+    "task": "Complete project proposal",
+    "description": "Write a detailed project proposal document",
+    "dueDate": "2023-05-31T00:00:00.000Z",
+    "priority": "High",
+    "status": "Pending",
+    "labels": [
+      "Work"
+    ],
+    "attachments": [
+      {
+        "name": "Proposal Document",
+        "path": "/attachments/proposal.pdf"
+      }
+    ]
+  },
+  {
+    "task": "Review code changes",
+    "description": "Review and provide feedback on code changes",
+    "dueDate": "2023-06-05T00:00:00.000Z",
+    "priority": "High",
+    "status": "In Progress",
+    "labels": [
+      "Work",
+      "Code Review"
+    ],
+    "attachments": []
+  },
+  {
+    "task": "Update website content",
+    "description": "Review and update website content with latest information",
+    "dueDate": "2023-06-10T00:00:00.000Z",
+    "priority": "Medium",
+    "status": "Pending",
+    "labels": [
+      "Work",
+      "Website"
+    ],
+    "attachments": []
+  },
+  {
+    "task": "Prepare presentation",
+    "description": "Create a presentation for the upcoming meeting",
+    "dueDate": "2023-06-15T00:00:00.000Z",
+    "priority": "High",
+    "status": "In Progress",
+    "labels": [
+      "Work",
+      "Presentation"
+    ],
+    "attachments": [
+      {
+        "name": "Presentation Slides",
+        "path": "/attachments/presentation.pptx"
+      }
+    ]
+  },
+  {
+    "task": "Organize team building event",
+    "description": "Plan and coordinate a team building event for the department",
+    "dueDate": "2023-06-30T00:00:00.000Z",
+    "priority": "Low",
+    "status": "Pending",
+    "labels": [
+      "Work",
+      "Event"
+    ],
+    "attachments": []
+  }
+]
