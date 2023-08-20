@@ -21,12 +21,12 @@ const db = mongoose.connection;
 // Listen for the connection event
 db.on('connected', () => {
 	console.log(`Connected to MongoDB at ${db.host}:${db.port}`.cyan.bold);
-  });
-  
-  // Listen for errors
-  db.on('error', (err) => {
+});
+
+// Listen for errors
+db.on('error', err => {
 	console.error(`MongoDB connection error: ${err.message}`.red.bold);
-  });
+});
 
 db.once('open', () => {
 	//Load models
@@ -58,7 +58,7 @@ db.once('open', () => {
 	const deleteData = async () => {
 		try {
 			await Tasks.deleteMany();
-			console.log('Data Destroyed...'.green.inverse);
+			console.log('Data Destroyed...'.red.inverse);
 			process.exit();
 		} catch (err) {
 			console.error('Error deleting data:', err);
