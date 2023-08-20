@@ -14,7 +14,7 @@ exports.getTasks = asyncHandler(async (req, res, next) => {
 	// copy req.query
 	const reqQuery = { ...req.query };
 
-	// fieldss to exclude
+	// fields to exclude
 	const removeFields = ['select', 'sort', 'page', 'limit'];
 
 	// loop over removeFelds and delete from reqQuery
@@ -55,7 +55,6 @@ exports.getTasks = asyncHandler(async (req, res, next) => {
 	const tasks = await query;
 
 	//Pagination result
-
 	const pagination = {};
 
 	if (endIndex < total) {
@@ -140,6 +139,7 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 
 	res.status(200).json({ success: true, data: {} });
 });
+
 //@desc     Update task
 //@route    PUT /api/taskman/:id/photo
 //@access   Private
