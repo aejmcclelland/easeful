@@ -30,7 +30,7 @@ db.on('error', err => {
 
 db.once('open', () => {
 	//Load models
-	const Tasks = require('./src/models/tasks');
+	const Tasks = require('./src/models/Tasks');
 
 	//Read JSOn files
 	const tasks = JSON.parse(
@@ -55,7 +55,7 @@ db.once('open', () => {
 		}
 	};
 	//Delete data from DB
-	const deleteData = async () => {
+	const deleteData = async () => {			
 		try {
 			await Tasks.deleteMany();
 			console.log('Data Destroyed...'.red.inverse);
