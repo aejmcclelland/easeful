@@ -31,8 +31,10 @@ app.use(express.json());
 
 //Route files
 const tasks = require('./src/routes/tasks');
+const auth = require('./src/routes/auth');
 
-app.use('/api/taskman', tasks); //mount routers
+app.use('/api/taskman', tasks);
+app.use('/api/auth', auth); //mount routers
 
 app.use(errorHandler);
 
