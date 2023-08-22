@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const colors = require('colors');
 const errorHandler = require('./src/middleware/error');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 //Load env variables
 dotenv.config({ path: '../taskmanager-server/.env' });
 
@@ -28,6 +29,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 //Body parser
 app.use(express.json());
+
+//Cookie parser
+app.use(cookieParser());
 
 //Route files
 const tasks = require('./src/routes/tasks');
