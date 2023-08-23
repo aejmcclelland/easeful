@@ -94,6 +94,9 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 //@route    POST /api/taskman
 //@access   Private
 exports.createTask = asyncHandler(async (req, res, next) => {
+	//Add user to req.body
+	req.body.user = req.user.id;
+
 	const images = []; //store upload image URLs and filenames
 
 	// Images have already been uploaded and processed by multer and multer-storage-cloudinary
@@ -106,22 +109,47 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 		}
 	}
 
+	//Check for published task
+	const publishedTask = await Tasks.findOne({ user: req.user.id });
+
+	//if the user is not the publisher, they cannot view
+	if (publishedTask && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`The user with ID ${req.user.id} has already published this task`,
+				400
+			)
+		);
+	}
 	const task = await Tasks.create({ ...req.body, images: images });
 	res.status(201).json({ success: true, data: task });
 });
+
 //@desc     Update task
 //@route    PUT /api/taskman/:id
 //@access   Private
 exports.updateTask = asyncHandler(async (req, res, next) => {
-	const task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
-		new: true,
-		runValidators: true,
-	});
+	let task = await Tasks.findById(req.params.id);
+
 	if (!task) {
 		return next(
 			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
 		);
 	}
+	//Make sure user is Task owner
+	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorised to update this task`,
+				401
+			)
+		);
+	}
+
+	task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
+		new: true,
+		runValidators: true,
+	});
 
 	res.status(200).json({ success: true, data: task });
 });
@@ -129,13 +157,25 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 //@route    DELETE /api/taskman/:id
 //@access   Private
 exports.deleteTask = asyncHandler(async (req, res, next) => {
-	const task = await Tasks.findByIdAndDelete(req.params.id);
+	const task = await Tasks.findById(req.params.id);
 
 	if (!task) {
 		return next(
 			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
 		);
 	}
+
+	//Make sure user is Task owner
+	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorised to delete this task`,
+				401
+			)
+		);
+	}
+
+	task.remove();
 
 	res.status(200).json({ success: true, data: {} });
 });

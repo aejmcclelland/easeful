@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const User = require('../models/User');
@@ -16,7 +17,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 		role,
 	});
 
-	sendTokenResposne(user, 200, res);
+	sendTokenResponse(user, 200, res);
 });
 
 //@desc     login user
@@ -41,11 +42,43 @@ exports.login = asyncHandler(async (req, res, next) => {
 	if (!isMatch) {
 		return next(new ErrorResponse('Invalid credentials', 401));
 	}
-	sendTokenResposne(user, 200, res);
+	sendTokenResponse(user, 200, res);
+});
+
+//@desc     Get current logged in user
+//@route    GET /api/auth/me
+//@access   Private
+exports.getMe = asyncHandler(async (req, res, next) => {
+	const user = req.user; //find user by id from the req in auth.js middleware
+	res.status(200).json({
+		success: true,
+		data: user,
+	});
+});
+
+//@desc     Forgot password
+//@route    POST /api/auth/forgotpassword
+//@access   Public
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+	const user = await User.findOne({ email: req.body.email });
+
+	if (!user) {
+		return next(new ErrorResponse('There is no user with that email', 404));
+	}
+
+	//Get reset token
+	const resetToken = user.getResetPasswordToken();
+
+	console.log(resetToken);
+
+	res.status(200).json({
+		success: true,
+		data: user,
+	});
 });
 
 //Get token from model, create cookie and send response
-const sendTokenResposne = (user, statusCode, res) => {
+const sendTokenResponse = (user, statusCode, res) => {
 	//Create token
 	const token = user.getSignedJwtToken();
 

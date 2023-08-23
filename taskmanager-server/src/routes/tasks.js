@@ -14,22 +14,27 @@ const {
 
 const router = express.Router();
 
-const { protect } = require('../middleware/auth');
+const { protect, authorise } = require('../middleware/auth');
+
+router
+	.route('/:id/photo')
+	.put(protect, authorise('publisher', 'admin'), taskPhotoUpload)
+	.post(protect, authorise('publisher', 'admin'), taskPhotoUpload);
 
 router
 	.route('/')
 	.get(getTasks)
-	.post(protect, upload.array('images'), createTask);
+	.post(
+		protect,
+		authorise('publisher', 'admin'),
+		upload.array('images'),
+		createTask
+	);
 
 router
 	.route('/:id')
 	.get(getTask)
-	.put(protect, updateTask)
-	.delete(protect, deleteTask);
-
-router
-	.route('/:id/photo')
-	.put(protect, taskPhotoUpload)
-	.post(protect, taskPhotoUpload);
+	.put(protect, authorise('publisher', 'admin'), updateTask)
+	.delete(protect, authorise('publisher', 'admin'), deleteTask);
 
 module.exports = router;

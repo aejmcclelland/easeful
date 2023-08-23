@@ -30,11 +30,15 @@ db.on('error', err => {
 
 db.once('open', () => {
 	//Load models
-	const Tasks = require('./src/models/Tasks');
-
+	const Tasks = require('./src/models/tasks');
+	const Users = require('./src/models/User');
 	//Read JSOn files
 	const tasks = JSON.parse(
 		fs.readFileSync(`${__dirname}/data/tasks.json`, 'utf-8')
+	);
+
+	const users = JSON.parse(
+		fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8')
 	);
 
 	tasks.forEach(task => {
@@ -45,7 +49,8 @@ db.once('open', () => {
 	//Import into DB
 	const importData = async () => {
 		try {
-			await Tasks.insertMany(tasks);
+			await Tasks.create(tasks);
+			await Users.create(users);
 			console.log('Data Imported...'.green.inverse);
 			process.exit();
 		} catch (err) {
@@ -55,9 +60,10 @@ db.once('open', () => {
 		}
 	};
 	//Delete data from DB
-	const deleteData = async () => {			
+	const deleteData = async () => {
 		try {
 			await Tasks.deleteMany();
+			await Users.deleteMany();
 			console.log('Data Destroyed...'.red.inverse);
 			process.exit();
 		} catch (err) {
