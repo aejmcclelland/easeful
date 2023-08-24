@@ -14,6 +14,8 @@ const {
 
 const router = express.Router();
 
+const Tasks = require('../models/Tasks');
+const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
 
 router
@@ -23,7 +25,7 @@ router
 
 router
 	.route('/')
-	.get(getTasks)
+	.get(advancedResults(Tasks), getTasks)
 	.post(
 		protect,
 		authorise('publisher', 'admin'),

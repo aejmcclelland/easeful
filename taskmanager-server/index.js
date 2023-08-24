@@ -42,9 +42,11 @@ app.use(
 //Route files
 const tasks = require('./src/routes/tasks');
 const auth = require('./src/routes/auth');
+const users = require('./src/routes/users');
 
 app.use('/api/taskman', tasks);
 app.use('/api/auth', auth); //mount routers
+app.use('/api/users', users); //mount routers
 
 app.use(errorHandler);
 

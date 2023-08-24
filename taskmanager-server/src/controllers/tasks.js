@@ -2,7 +2,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const slugify = require('slugify');
 const multer = require('multer');
-const Tasks = require('../models/tasks');
+const Tasks = require('../models/Tasks');
 const { storage } = require('../cloudinary/index');
 const upload = multer({ storage: storage });
 
