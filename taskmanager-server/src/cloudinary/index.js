@@ -12,6 +12,11 @@ const storage = new CloudinaryStorage({
 	params: {
 		folder: 'TaskManager',
 		formats: ['jpeg', 'jpg', 'pdf', 'png'],
+		// Generate a custom filename
+		filename: (req, file, cb) => {
+			const uniqueFilename = `photo_${req.params.id}${path.extname(file.originalname)}`;
+			cb(undefined, uniqueFilename);
+		  },
 	},
 });
 

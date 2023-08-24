@@ -1,5 +1,6 @@
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
+const slugify = require('slugify');
 const multer = require('multer');
 const Tasks = require('../models/tasks');
 const { storage } = require('../cloudinary/index');
@@ -9,71 +10,7 @@ const upload = multer({ storage: storage });
 //@route    GET /api/taskman
 //@access   Public
 exports.getTasks = asyncHandler(async (req, res, next) => {
-	let query;
-
-	// copy req.query
-	const reqQuery = { ...req.query };
-
-	// fields to exclude
-	const removeFields = ['select', 'sort', 'page', 'limit'];
-
-	// loop over removeFelds and delete from reqQuery
-	removeFields.forEach(param => delete reqQuery[param]);
-
-	// create query string form query params
-	let queryStr = JSON.stringify(reqQuery);
-
-	// replace takes in regex of any operator ($gt, $gte, etc)
-	queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
-
-	// set query to queryStr to find resource
-	query = Tasks.find(JSON.parse(queryStr));
-
-	// select fields
-	if (req.query.select) {
-		const fields = req.query.select.split(',').join(' ');
-		query = query.select(fields);
-	}
-	// sort
-	if (req.query.sort) {
-		const sortBy = req.query.sort.split(',').join(' ');
-		query = query.sort(sortBy);
-	} else {
-		query = query.sort({ createdAt: 'asc', name: -1 });
-	}
-
-	//Pagination
-	const page = parseInt(req.query.page, 10) || 1;
-	const limit = parseInt(req.query.limit, 10) || 10;
-	const startIndex = (page - 1) * limit;
-	const endIndex = page * limit;
-	const total = await Tasks.countDocuments(JSON.parse(queryStr));
-
-	query = query.skip(startIndex).limit(limit);
-
-	// Execute query
-	const tasks = await query;
-
-	//Pagination result
-	const pagination = {};
-
-	if (endIndex < total) {
-		pagination.next = {
-			page: page + 1,
-			limit,
-		};
-	}
-
-	if (startIndex > 0) {
-		pagination.prev = {
-			page: page - 1,
-			limit,
-		};
-	}
-
-	res
-		.status(200)
-		.json({ success: true, count: tasks.length, pagination, data: tasks });
+	res.status(200).json(res.advancedResults);
 	console.log(req.body);
 });
 
@@ -146,6 +83,11 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 		);
 	}
 
+	//update slug when updating name
+	if (Object.keys(req.body).includes('name')) {
+		req.body.slug = slugify(req.body.name, { lower: true });
+	}
+
 	task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
 		runValidators: true,
@@ -153,6 +95,7 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 
 	res.status(200).json({ success: true, data: task });
 });
+
 //@desc     Delete task
 //@route    DELETE /api/taskman/:id
 //@access   Private
@@ -175,7 +118,7 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	task.remove();
+	await task.remove();
 
 	res.status(200).json({ success: true, data: {} });
 });
@@ -191,6 +134,43 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 
 		try {
 			const task = await Tasks.findById(req.params.id);
+			if (!task) {
+				return next(
+					new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
+				);
+			}
+
+			// Make sure user is task owner
+			if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+				return next(
+					new ErrorResponse(
+						`User ${req.user.id} is not authorized to update this task`,
+						401
+					)
+				);
+			}
+
+			if (!req.files) {
+				return next(new ErrorResponse(`Please upload a file`, 400));
+			}
+
+			const file = req.files.file;
+
+			// Make sure the image is a photo
+			if (!file.mimetype.startsWith('image')) {
+				return next(new ErrorResponse(`Please upload an image file`, 400));
+			}
+			//Check the file size
+			if (file.size > parseInt(process.env.FILE_UPLOAD_LIMIT) * 1024 * 1024) {
+				return next(
+					new ErrorResponse(
+						`File size exceeds the ${parseInt(
+							process.env.FILE_UPLOAD_LIMIT
+						)}MB limit`,
+						400
+					)
+				);
+			}
 			console.log('Task:', task);
 			console.log(req.body, req.file);
 			res.send('Image uploaded successfully!');

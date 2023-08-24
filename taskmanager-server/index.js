@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const colors = require('colors');
+const fileupload = require('express-fileupload');
 const errorHandler = require('./src/middleware/error');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -32,7 +33,12 @@ app.use(express.json());
 
 //Cookie parser
 app.use(cookieParser());
-
+//Limit file upload size
+app.use(
+	fileupload({
+		limits: { fileSize: parseInt(process.env.FILE_UPLOAD_LIMIT) },
+	})
+);
 //Route files
 const tasks = require('./src/routes/tasks');
 const auth = require('./src/routes/auth');
