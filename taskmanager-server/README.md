@@ -20,3 +20,6 @@ npm run dev
 # Run in production mode
 npm start
 ```
+
+- Version 1.0.0
+- License: MIT
