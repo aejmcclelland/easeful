@@ -30,7 +30,7 @@ db.on('error', err => {
 
 db.once('open', () => {
 	//Load models
-	const Tasks = require('./src/models/tasks');
+	const Tasks = require('./src/models/Tasks');
 	const Users = require('./src/models/User');
 	//Read JSOn files
 	const tasks = JSON.parse(

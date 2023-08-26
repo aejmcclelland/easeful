@@ -12,9 +12,10 @@ const {
 	taskPhotoUpload,
 } = require('../controllers/tasks');
 
+const Tasks = require('../models/Tasks');
+
 const router = express.Router();
 
-const Tasks = require('../models/Tasks');
 const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
 

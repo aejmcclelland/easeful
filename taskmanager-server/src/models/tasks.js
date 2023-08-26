@@ -2,75 +2,81 @@ const mongoose = require('mongoose');
 const slugify = require('slugify');
 const geocoder = require('../utils/geocoder');
 
-const taskSchema = new mongoose.Schema({
-	task: {
-		type: String,
-		required: [true, 'Please add a task'],
-		maxlength: [150, 'Task name cannot be longer than 150 characters'],
-		unique: true,
-		trim: true,
-	},
-	slug: String,
-	description: {
-		type: String,
-		required: [true, 'Please add a description'],
-	},
-	dueDate: {
-		type: Date,
-	},
-	priority: {
-		type: String,
-		enum: ['Low', 'Medium', 'High'],
-		default: 'Medium',
-	},
-	status: {
-		type: String,
-		enum: ['Pending', 'In Progress', 'Completed'],
-		default: 'Pending',
-	},
-	labels: {
-		type: [String],
-	},
-	images: [
-		{
-			url: String,
-			filename: String,
-		},
-	],
-	address: {
-		type: String,
-	},
-	location: {
-		// GeoJSON Point
-		type: {
+const taskSchema = new mongoose.Schema(
+	{
+		task: {
 			type: String,
-			enum: ['Point'],
+			required: [true, 'Please add a task'],
+			maxlength: [150, 'Task name cannot be longer than 150 characters'],
+			unique: true,
+			trim: true,
 		},
-		coordinates: {
-			type: [Number],
-			required: '2dsphere',
+		slug: String,
+		description: {
+			type: String,
+			required: [true, 'Please add a description'],
 		},
-		formattedAddress: String,
-		street: String,
-		city: String,
-		state: String,
-		zipcode: String,
-		country: String,
+		dueDate: {
+			type: Date,
+		},
+		priority: {
+			type: String,
+			enum: ['Low', 'Medium', 'High'],
+			default: 'Medium',
+		},
+		status: {
+			type: String,
+			enum: ['Pending', 'In Progress', 'Completed'],
+			default: 'Pending',
+		},
+		labels: {
+			type: [String],
+		},
+		images: [
+			{
+				url: String,
+				filename: String,
+			},
+		],
+		address: {
+			type: String,
+		},
+		location: {
+			// GeoJSON Point
+			type: {
+				type: String,
+				enum: ['Point'],
+			},
+			coordinates: {
+				type: [Number],
+				required: '2dsphere',
+			},
+			formattedAddress: String,
+			street: String,
+			city: String,
+			state: String,
+			zipcode: String,
+			country: String,
+		},
+		createdAt: {
+			type: Date,
+			default: Date.now,
+		},
+		updatedAt: {
+			type: Date,
+			default: Date.now,
+		},
+		user: {
+			type: mongoose.Schema.ObjectId,
+			ref: 'User',
+			required: true,
+		},
 	},
-	createdAt: {
-		type: Date,
-		default: Date.now,
-	},
-	updatedAt: {
-		type: Date,
-		default: Date.now,
-	},
-	user: {
-		type: mongoose.Schema.ObjectId,
-		ref: 'User',
-		required: true,
-	},
-});
+	{
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
 
 // Create task slug from task name
 taskSchema.pre('save', function (next) {

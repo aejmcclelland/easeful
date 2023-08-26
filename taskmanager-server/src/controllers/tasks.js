@@ -118,7 +118,7 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	await task.remove();
+	task.deleteOne();
 
 	res.status(200).json({ success: true, data: {} });
 });
