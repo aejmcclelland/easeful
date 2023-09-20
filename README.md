@@ -1,3 +1,3 @@
 # taskmanager
 
-Backend API for Task Manager application which is a task management website/application
+Task Manager application is a backend API for task management website/application containing an option to upload images to Cloudinary.
