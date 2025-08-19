@@ -1,0 +1,3 @@
+packages:
+  - "taskmanager-server"
+  - "taskmanager-client"

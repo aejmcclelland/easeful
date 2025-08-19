@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
@@ -12,15 +14,15 @@ const helmet = require('helmet');
 const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
-//Load env variables
-dotenv.config({ path: '../taskmanager-server/.env' });
+
 
 const connectDB = require('./src/config/db');
 //connect to the database
 connectDB();
 
 const app = express();
-
+const u = new URL(process.env.MONGO_URI);
+console.log('Mongo user from URI:', u.username);
 //use CORS middleware
 // Allow requests from localhost:3001 (your React app's development server)
 app.use(
@@ -34,22 +36,6 @@ app.use(
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
-
-// Allow requests from your frontend domain
-// const allowedOrigins = ['https://your-frontend-domain.com', 'http://localhost:3001']; // Add your frontend domain(s)
-
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     if (allowedOrigins.includes(origin) || !origin) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// };
-//app.use(cors(corsOptions));
 
 //Body parser
 app.use(express.json());

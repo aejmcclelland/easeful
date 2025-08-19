@@ -1,0 +1,10 @@
+{
+    "name": "taskmanager",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "pnpm -F taskmanager-server dev & pnpm -F taskmanager-client dev",
+        "dev:server": "pnpm -F taskmanager-server dev",
+        "dev:client": "pnpm -F taskmanager-client dev"
+    }
+}

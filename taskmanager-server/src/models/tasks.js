@@ -49,7 +49,7 @@ const taskSchema = new mongoose.Schema(
 			},
 			coordinates: {
 				type: [Number],
-				required: '2dsphere',
+				index: '2dsphere',
 			},
 			formattedAddress: String,
 			street: String,
@@ -57,14 +57,6 @@ const taskSchema = new mongoose.Schema(
 			state: String,
 			zipcode: String,
 			country: String,
-		},
-		createdAt: {
-			type: Date,
-			default: Date.now,
-		},
-		updatedAt: {
-			type: Date,
-			default: Date.now,
 		},
 		user: {
 			type: mongoose.Schema.ObjectId,
@@ -75,6 +67,7 @@ const taskSchema = new mongoose.Schema(
 	{
 		toJSON: { virtuals: true },
 		toObject: { virtuals: true },
+		timestamps: true,
 	}
 );
 
@@ -86,7 +79,10 @@ taskSchema.pre('save', function (next) {
 
 //Geocode & create location field
 taskSchema.pre('save', async function (next) {
+	if (!this.address) return next();
+
 	const loc = await geocoder.geocode(this.address);
+	if (!loc.length) return next();
 	this.location = {
 		type: 'Point',
 		coordinates: [loc[0].longitude, loc[0].latitude],
