@@ -24,7 +24,7 @@ db.on('connected', () => {
 });
 
 // Listen for errors
-db.on('error', err => {
+db.on('error', (err) => {
 	console.error(`MongoDB connection error: ${err.message}`.red.bold);
 });
 
@@ -41,7 +41,7 @@ db.once('open', () => {
 		fs.readFileSync(`${__dirname}/data/users.json`, 'utf-8')
 	);
 
-	tasks.forEach(task => {
+	tasks.forEach((task) => {
 		// Convert the dueDate string to a Date object
 		task.dueDate = new Date(task.dueDate);
 	});
@@ -49,7 +49,12 @@ db.once('open', () => {
 	//Import into DB
 	const importData = async () => {
 		try {
-			await Tasks.create(tasks);
+			const slugify = require('slugify');
+			const tasksWithSlugs = tasks.map((t) => ({
+				...t,
+				slug: slugify(t.task, { lower: true }),
+			}));
+			await Tasks.insertMany(tasksWithSlugs, { ordered: false });
 			await Users.create(users);
 			console.log('Data Imported...'.green.inverse);
 			process.exit();

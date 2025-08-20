@@ -1,3 +1,4 @@
+import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 import { Task } from '@/lib/types';
@@ -25,7 +26,9 @@ export default async function TasksPage() {
       <h1 className="text-3xl font-bold mb-6">Tasks</h1>
       <ul className="grid gap-3">
         {data.map((t: Task) => (
-          <TaskCard key={t._id} task={t} />
+          <Link key={t._id} href={`/tasks/${t._id}`}>
+            <TaskCard task={t} />
+          </Link>
         ))}
       </ul>
     </div>
