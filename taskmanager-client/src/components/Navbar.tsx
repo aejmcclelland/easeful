@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import type { User } from '@/lib/types';
 
@@ -8,6 +9,16 @@ export default function Navbar() {
 	const [me, setMe] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+
+	// Lock body scroll when mobile menu is open
+	useEffect(() => {
+		document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [isMobileMenuOpen]);
 
 	useEffect(() => {
 		getMe();
@@ -144,74 +155,75 @@ export default function Navbar() {
 				)}
 			</div>
 
-			{/* Mobile Menu Dropdown */}
-			{isMobileMenuOpen && (
-				<div className='fixed inset-0 top-16 z-50 lg:hidden'>
-					{/* Backdrop */}
-					<div
-						className='absolute inset-0 bg-black bg-opacity-50'
-						onClick={() => setIsMobileMenuOpen(false)}></div>
+			{mounted && isMobileMenuOpen &&
+				createPortal(
+					<div className='fixed inset-0 z-[9999] lg:hidden'>
+						{/* Backdrop covering the whole viewport */}
+						<div
+							className='absolute inset-0 bg-base-100/80 backdrop-blur-sm'
+							onClick={() => setIsMobileMenuOpen(false)}
+						/>
 
-					{/* Menu Content */}
-					<div className='absolute top-0 left-0 right-0 bg-base-100 border-b border-base-300 shadow-xl'>
-						<div className='p-4 space-y-3'>
-							{/* Mobile Navigation Links */}
-							<div className='space-y-2'>
-								<Link
-									href='/tasks'
-									className='block w-full text-left px-4 py-2 rounded-lg hover:bg-base-200 transition-colors'
-									onClick={() => setIsMobileMenuOpen(false)}>
-									<i className='fas fa-tasks mr-3'></i>
-									Tasks
-								</Link>
-								<Link
-									href='/tasks/new'
-									className='block w-full text-left px-4 py-2 rounded-lg hover:bg-base-200 transition-colors'
-									onClick={() => setIsMobileMenuOpen(false)}>
-									<i className='fas fa-plus mr-3'></i>
-									New Task
-								</Link>
-							</div>
-
-							{/* Mobile User Section */}
-							<div className='border-t border-base-300 pt-3'>
-								{loading ? (
-									<div className='flex items-center px-4 py-2'>
-										<div className='loading loading-spinner loading-sm mr-3'></div>
-										<span className='text-sm text-base-content/70'>
-											Loading...
-										</span>
-									</div>
-								) : me ? (
-									<div className='space-y-2'>
-										<div className='px-4 py-2 text-sm font-medium text-base-content/70'>
-											<i className='fas fa-user-tag mr-2'></i>
-											{me.name || me.email}
-										</div>
-										<button
-											onClick={() => {
-												handleLogout();
-												setIsMobileMenuOpen(false);
-											}}
-											className='block w-full text-left px-4 py-2 rounded-lg text-error hover:bg-error hover:text-error-content transition-colors'>
-											<i className='fas fa-sign-out-alt mr-3'></i>
-											Logout
-										</button>
-									</div>
-								) : (
+						{/* Menu panel below the navbar height (approx 4rem = top-16) */}
+						<div className='absolute top-16 left-0 right-0 bg-base-100 border-b border-base-300 shadow-xl'>
+							<div className='p-4 space-y-3'>
+								{/* Mobile Navigation Links */}
+								<div className='space-y-2'>
 									<Link
-										href='/login'
-										className='block w-full text-left px-4 py-2 rounded-lg bg-primary text-primary-content hover:bg-primary-focus transition-colors'
+										href='/tasks'
+										className='block w-full text-left px-4 py-2 rounded-lg hover:bg-base-200 transition-colors'
 										onClick={() => setIsMobileMenuOpen(false)}>
-										<i className='fas fa-sign-in-alt mr-3'></i>
-										Login
+										<i className='fas fa-tasks mr-3'></i>
+										Tasks
 									</Link>
-								)}
+									<Link
+										href='/tasks/new'
+										className='block w-full text-left px-4 py-2 rounded-lg hover:bg-base-200 transition-colors'
+										onClick={() => setIsMobileMenuOpen(false)}>
+										<i className='fas fa-plus mr-3'></i>
+										New Task
+									</Link>
+								</div>
+
+								{/* Mobile User Section */}
+								<div className='border-t border-base-300 pt-3'>
+									{loading ? (
+										<div className='flex items-center px-4 py-2'>
+											<div className='loading loading-spinner loading-sm mr-3'></div>
+											<span className='text-sm text-base-content/70'>Loading...</span>
+										</div>
+									) : me ? (
+										<div className='space-y-2'>
+											<div className='px-4 py-2 text-sm font-medium text-base-content/70'>
+												<i className='fas fa-user-tag mr-2'></i>
+												{me.name || me.email}
+											</div>
+											<button
+												onClick={() => {
+													handleLogout();
+													setIsMobileMenuOpen(false);
+												}}
+												className='block w-full text-left px-4 py-2 rounded-lg text-error hover:bg-error hover:text-error-content transition-colors'>
+												<i className='fas fa-sign-out-alt mr-3'></i>
+												Logout
+											</button>
+										</div>
+									) : (
+										<Link
+											href='/login'
+											className='block w-full text-left px-4 py-2 rounded-lg bg-primary text-primary-content hover:bg-primary-focus transition-colors'
+											onClick={() => setIsMobileMenuOpen(false)}>
+											<i className='fas fa-sign-in-alt mr-3'></i>
+											Login
+										</Link>
+									)}
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-			)}
+					</div>,
+					document.body
+				)
+			}
 		</nav>
 	);
 }
