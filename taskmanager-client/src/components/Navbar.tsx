@@ -67,13 +67,13 @@ export default function Navbar() {
 		<div className='navbar bg-base-100 border-b shadow-sm'>
 			{/* Left side - Logo and main navigation */}
 			<div className='navbar-start'>
-				<div className='dropdown'>
+                                <div className='dropdown relative'>
 					<div tabIndex={0} role='button' className='btn btn-ghost lg:hidden'>
 						<i className='fas fa-bars text-lg'></i>
 					</div>
 					<ul
 						tabIndex={0}
-						className='menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52'>
+                                                className='menu menu-sm dropdown-content mt-3 z-50 p-2 shadow bg-base-100 rounded-box w-52'>
 						<li>
 							<Link href='/tasks'>
 								<i className='fas fa-tasks mr-2'></i>
