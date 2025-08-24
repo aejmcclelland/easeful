@@ -1,5 +1,3 @@
-
-
 // Shared app types for the Taskman client
 
 // A single Task document (shape based on your Express/Mongoose model)
@@ -41,3 +39,13 @@ export type TaskResponse = {
   success: boolean;
   data: Task;
 };
+
+// User model (matches your server User schema shape)
+export type User = {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'publisher' | 'admin' | string;
+  createdAt?: string;
+};
+

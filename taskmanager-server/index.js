@@ -15,7 +15,6 @@ const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 
-
 const connectDB = require('./src/config/db');
 //connect to the database
 connectDB();
@@ -25,11 +24,24 @@ const u = new URL(process.env.MONGO_URI);
 console.log('Mongo user from URI:', u.username);
 //use CORS middleware
 // Allow requests from localhost:3001 (your React app's development server)
+const allowedOrigins = [
+	'http://localhost:3000', // Next.js dev server
+	'http://localhost:3001', // React dev server (if used)
+	'https://your-production-domain.com',
+];
+
 app.use(
 	cors({
-		origin: 'http://localhost:3001',
+		origin: function (origin, callback) {
+			if (!origin || allowedOrigins.includes(origin)) {
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
+		},
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		allowedHeaders: ['Content-Type', 'Authorization'],
+		credentials: true,
 	})
 );
 //Development logging middleware

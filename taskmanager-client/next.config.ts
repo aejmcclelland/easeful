@@ -1,14 +1,20 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:3000/api/:path*",
-      },
-    ];
-  },
+	async rewrites() {
+		return [
+			{
+				source: '/api/:path*',
+				destination: 'http://localhost:3000/api/:path*',
+			},
+		];
+	},
+	// For development, we can also set the port to avoid conflicts
+	// This is optional but can help with cookie issues
+	experimental: {
+		// Enable if you want to run Next.js on a different port
+		// serverComponentsExternalPackages: [],
+	},
 };
 
 export default nextConfig;

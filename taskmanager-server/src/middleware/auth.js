@@ -3,37 +3,40 @@ const asyncHandler = require('./async');
 const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/User');
 
-//Protect routes
+// Protect routes
 exports.protect = asyncHandler(async (req, res, next) => {
-	let token;
+  let token;
 
-	if (
-		req.headers.authorization &&
-		req.headers.authorization.startsWith('Bearer')
-	) {
-		//Set token from Bearer token in header
-		token = req.headers.authorization.split(' ')[1];
-		//Set token form cookie
-	}
-	//else if (req.cookies.token){
-	//token = req.cookies.token;
-	//}
+  // Prefer: Authorization: Bearer <token>
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.headers['x-auth-token']) {
+    // Allow a custom header as a fallback
+    token = req.headers['x-auth-token'];
+  } else if (req.cookies && req.cookies.token) {
+    // Allow the httpOnly cookie set by login
+    token = req.cookies.token;
+  }
 
-	//Make sure toekn exists
-	if (!token) {
-		return next(new ErrorResponse('Not authorised to access this route', 401));
-	}
+  // Ensure token exists
+  if (!token) {
+    return next(new ErrorResponse('Not authorised to access this route', 401));
+  }
 
-	try {
-		//Verify token
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    // Verify token and attach user to req
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
 
-		console.log(decoded);
-		req.user = await User.findById(decoded.id);
-		next();
-	} catch (err) {
-		return next(new ErrorResponse('Not authorised to access this route', 401));
-	}
+    if (!user) {
+      return next(new ErrorResponse('Not authorised to access this route', 401));
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    return next(new ErrorResponse('Not authorised to access this route', 401));
+  }
 });
 
 // Grant access to specific roles

@@ -50,15 +50,14 @@ exports.login = asyncHandler(async (req, res, next) => {
 //@route    GET /api/auth/logout
 //@access   Private
 exports.logout = asyncHandler(async (req, res, next) => {
-	res.cookie('token', 'none', {
-		expires: new Date(Date.now() + 10 * 1000),
+	res.clearCookie('token', {
 		httpOnly: true,
+		sameSite: 'lax',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
 	});
 
-	res.status(200).json({
-		success: true,
-		data: {},
-	});
+	res.status(200).json({ success: true, data: {} });
 });
 
 //@desc     Get current logged in user
@@ -188,16 +187,16 @@ const sendTokenResponse = (user, statusCode, res) => {
 	const token = user.getSignedJwtToken();
 
 	const options = {
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
+		// Remove domain restriction to allow cross-origin cookies
+		// domain: undefined,
 		expires: new Date(
 			Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
 		),
-		httpOnly: true,
 	};
-
-	if (process.env.NODE_ENV === 'production') {
-		options.secure = true;
-	}
-
 	res
 		.status(statusCode)
 		.cookie('token', token, options)

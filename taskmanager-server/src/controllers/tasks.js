@@ -8,15 +8,20 @@ const upload = multer({ storage: storage });
 
 //@desc     Get all tasks
 //@route    GET /api/taskman
-//@access   Public
+//@access   Private
 exports.getTasks = asyncHandler(async (req, res, next) => {
+	// Filter tasks by the current user (unless they're admin)
+	if (req.user.role !== 'admin') {
+		req.query.user = req.user.id;
+	}
+
 	res.status(200).json(res.advancedResults);
 	console.log(req.body);
 });
 
 //@desc     Get one task
 //@route    GET /api/taskman/:id
-//@access   Public
+//@access   Private
 exports.getTask = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);
 
@@ -25,6 +30,17 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
 		);
 	}
+
+	// Make sure user is task owner (unless they're admin)
+	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorized to view this task`,
+				403
+			)
+		);
+	}
+
 	res.status(200).json({ success: true, data: task });
 });
 //@desc     Create new task
