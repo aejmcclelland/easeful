@@ -141,21 +141,22 @@ export default function Navbar() {
 							</li>
 							<li>
 								<button onClick={handleLogout} className='text-error'>
-									<i className='fas fa-sign-out-alt mr-2'></i>
+									<i className='fas fa-sign-out-alt mr-2 bg-success'></i>
 									Logout
 								</button>
 							</li>
 						</ul>
 					</div>
 				) : (
-					<Link href='/login' className='btn btn-primary btn-sm'>
-						<i className='fas fa-sign-in-alt mr-2'></i>
+					<Link href='/login' className='btn btn-primary btn-sm text-success'>
+						<i className='fas fa-sign-in-alt mr-2 text-primary'></i>
 						Login
 					</Link>
 				)}
 			</div>
 
-			{mounted && isMobileMenuOpen &&
+			{mounted &&
+				isMobileMenuOpen &&
 				createPortal(
 					<div className='fixed inset-0 z-[9999] lg:hidden'>
 						{/* Backdrop covering the whole viewport */}
@@ -190,7 +191,9 @@ export default function Navbar() {
 									{loading ? (
 										<div className='flex items-center px-4 py-2'>
 											<div className='loading loading-spinner loading-sm mr-3'></div>
-											<span className='text-sm text-base-content/70'>Loading...</span>
+											<span className='text-sm text-base-content/70'>
+												Loading...
+											</span>
 										</div>
 									) : me ? (
 										<div className='space-y-2'>
@@ -203,8 +206,8 @@ export default function Navbar() {
 													handleLogout();
 													setIsMobileMenuOpen(false);
 												}}
-												className='block w-full text-left px-4 py-2 rounded-lg text-error hover:bg-error hover:text-error-content transition-colors'>
-												<i className='fas fa-sign-out-alt mr-3'></i>
+												className='block w-full text-left px-4 py-2 rounded-lg text-error hover:bg-error hover:text-error-content transition-colors bg-accent'>
+												<i className='fas fa-sign-out-alt mr-3 text-primary'></i>
 												Logout
 											</button>
 										</div>
@@ -222,8 +225,7 @@ export default function Navbar() {
 						</div>
 					</div>,
 					document.body
-				)
-			}
+				)}
 		</nav>
 	);
 }
