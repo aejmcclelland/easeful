@@ -54,14 +54,36 @@ export default function Navbar() {
 
 	return (
 		<nav className='navbar bg-base-100 border-b'>
-			<div className='navbar-start'>
-				{/* Logo */}
-				<div className='dropdown'>
-					<div className='btn btn-ghost text-xl font-bold'>
-						<i className='fas fa-clipboard-list mr-2'></i>
-						Taskman
-					</div>
-				</div>
+		<div className='navbar-start'>
+  {/* Mobile menu */}
+  <div className='dropdown relative'>
+    <div tabIndex={0} role='button' className='btn btn-ghost lg:hidden'>
+      <i className='fas fa-bars text-lg'></i>
+    </div>
+    <ul
+      tabIndex={0}
+      className='menu menu-sm dropdown-content mt-3 z-50 p-2 shadow bg-base-100 rounded-box w-52'>
+      <li>
+        <Link href='/tasks' className='btn btn-ghost btn-sm'>
+          <i className='fas fa-tasks mr-2'></i>
+          Tasks
+        </Link>
+      </li>
+      <li>
+        <Link href='/tasks/new' className='btn btn-ghost btn-sm'>
+          <i className='fas fa-plus mr-2'></i>
+          New Task
+        </Link>
+      </li>
+    </ul>
+  </div>
+
+  {/* Logo */}
+  <Link href='/' className='btn btn-ghost text-xl font-bold'>
+    <i className='fas fa-clipboard-list mr-2'></i>
+    Taskman
+  </Link>
+</div
 
 				{/* Desktop Navigation */}
 				<div className='hidden lg:flex'>
