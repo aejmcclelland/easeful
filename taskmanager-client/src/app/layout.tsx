@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import './globals.css';
 import Navbar from '@/components/Navbar';
@@ -18,6 +20,18 @@ export default function RootLayout({
 			<body className='min-h-dvh bg-base-100'>
 				<Navbar />
 				<main className='container mx-auto p-4'>{children}</main>
+				<ToastContainer
+					position='top-right'
+					autoClose={5000}
+					hideProgressBar={false}
+					newestOnTop={false}
+					closeOnClick
+					rtl={false}
+					pauseOnFocusLoss
+					draggable
+					pauseOnHover
+					theme='light'
+				/>
 			</body>
 		</html>
 	);

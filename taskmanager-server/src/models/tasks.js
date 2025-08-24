@@ -8,7 +8,6 @@ const taskSchema = new mongoose.Schema(
 			type: String,
 			required: [true, 'Please add a task'],
 			maxlength: [150, 'Task name cannot be longer than 150 characters'],
-			unique: true,
 			trim: true,
 		},
 		slug: String,
@@ -63,6 +62,16 @@ const taskSchema = new mongoose.Schema(
 			ref: 'User',
 			required: true,
 		},
+		isPublic: {
+			type: Boolean,
+			default: false,
+		},
+		sharedWith: [
+			{
+				type: mongoose.Schema.ObjectId,
+				ref: 'User',
+			},
+		],
 	},
 	{
 		toJSON: { virtuals: true },

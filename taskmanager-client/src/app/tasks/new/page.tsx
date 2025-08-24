@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import Link from 'next/link';
 
 export default function NewTaskPage() {
@@ -19,8 +20,8 @@ export default function NewTaskPage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
 		setError(null);
+		setLoading(true);
 
 		try {
 			// Convert labels string to array
@@ -48,10 +49,16 @@ export default function NewTaskPage() {
 			}
 
 			const data = await res.json();
+
+			// Show success toast
+			toast.success('Task created successfully!');
+
+			// Redirect to the new task
 			router.push(`/tasks/${data.data._id}`);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Failed to create task';
 			setError(msg);
+			toast.error(msg);
 		} finally {
 			setLoading(false);
 		}

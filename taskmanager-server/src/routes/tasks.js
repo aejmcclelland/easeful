@@ -3,7 +3,6 @@ const multer = require('multer');
 const { storage } = require('../cloudinary');
 const upload = multer({ storage: storage });
 
-
 const {
 	getTasks,
 	getTask,
@@ -11,13 +10,14 @@ const {
 	updateTask,
 	deleteTask,
 	taskPhotoUpload,
+	resetAllTasks,
+	shareTask,
+	togglePublic,
 } = require('../controllers/tasks');
 
 const Tasks = require('../models/Tasks');
 
 const router = express.Router();
-
-
 
 const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
@@ -25,24 +25,17 @@ const { protect, authorise } = require('../middleware/auth');
 // Require authentication for all task routes
 router.use(protect);
 
-router
-	.route('/:id/photo')
-	.put(authorise('publisher', 'admin'), taskPhotoUpload)
-	.post(authorise('publisher', 'admin'), taskPhotoUpload);
+// Reset route (DEVELOPMENT ONLY)
+router.delete('/reset', resetAllTasks);
 
-router
-	.route('/')
-	.get(advancedResults(Tasks), getTasks)
-	.post(
-		authorise('publisher', 'admin'),
-		upload.array('images'),
-		createTask
-	);
+router.route('/:id/photo').put(taskPhotoUpload).post(taskPhotoUpload);
 
-router
-	.route('/:id')
-	.get(getTask)
-	.put(authorise('publisher', 'admin'), updateTask)
-	.delete(authorise('publisher', 'admin'), deleteTask);
+router.route('/').get(getTasks).post(upload.array('images', 5), createTask); // Allow up to 5 images, optional
+
+router.route('/:id').get(getTask).put(updateTask).delete(deleteTask);
+
+// Sharing routes
+router.put('/:id/share', shareTask);
+router.put('/:id/toggle-public', togglePublic);
 
 module.exports = router;

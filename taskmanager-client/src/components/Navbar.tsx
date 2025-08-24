@@ -51,7 +51,11 @@ export default function Navbar() {
 
 	async function handleLogout() {
 		try {
+			console.log('Logging out...');
 			await logout();
+			console.log('Logout successful');
+		} catch (error) {
+			console.error('Logout error:', error);
 		} finally {
 			setMe(null);
 			router.push('/login');
@@ -142,23 +146,12 @@ export default function Navbar() {
 						</div>
 
 						{/* Logout button */}
-						<div className='dropdown dropdown-end'>
-							<div tabIndex={0} role='button' className='btn btn-ghost btn-sm'>
-								<i className='fas fa-chevron-down'></i>
-							</div>
-							<ul
-								tabIndex={0}
-								className='dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52'>
-								<li>
-									<button
-										onClick={handleLogout}
-										className='text-error hover:text-error-content'>
-										<i className='fas fa-sign-out-alt mr-2'></i>
-										Logout
-									</button>
-								</li>
-							</ul>
-						</div>
+						<button
+							onClick={handleLogout}
+							className='btn btn-ghost btn-sm text-error hover:text-error-content'>
+							<i className='fas fa-sign-out-alt mr-2'></i>
+							Logout
+						</button>
 					</div>
 				) : (
 					<div className='flex items-center gap-2'>

@@ -6,20 +6,23 @@ export async function GET(
 	req: Request,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
-	const { id } = await params;
-	const upstream = `${API_BASE}/api/taskman/${id}`;
-
 	// Get the token from the request cookies
 	const token = req.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
 
+	if (!token) {
+		return NextResponse.json(
+			{ error: 'Authentication required' },
+			{ status: 401 }
+		);
+	}
+
+	const { id } = await params;
+	const upstream = `${API_BASE}/api/taskman/${id}`;
+
 	const headers: HeadersInit = {
 		cookie: req.headers.get('cookie') ?? '',
+		Authorization: `Bearer ${token}`,
 	};
-
-	// If we have a token, also pass it as Authorization header
-	if (token) {
-		headers.Authorization = `Bearer ${token}`;
-	}
 
 	const res = await fetch(upstream, {
 		headers,
@@ -29,4 +32,41 @@ export async function GET(
 		status: res.status,
 		headers: res.headers,
 	});
+}
+
+export async function DELETE(
+	req: Request,
+	{ params }: { params: Promise<{ id: string }> }
+) {
+	// Get the token from the request cookies
+	const token = req.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
+
+	if (!token) {
+		return NextResponse.json(
+			{ error: 'Authentication required' },
+			{ status: 401 }
+		);
+	}
+
+	const { id } = await params;
+	const upstream = `${API_BASE}/api/taskman/${id}`;
+
+	const res = await fetch(upstream, {
+		method: 'DELETE',
+		headers: {
+			cookie: req.headers.get('cookie') ?? '',
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!res.ok) {
+		const errorText = await res.text();
+		return NextResponse.json(
+			{ error: errorText || 'Failed to delete task' },
+			{ status: res.status }
+		);
+	}
+
+	const data = await res.json();
+	return NextResponse.json(data);
 }

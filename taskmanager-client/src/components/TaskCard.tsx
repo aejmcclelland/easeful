@@ -2,15 +2,40 @@
 import React from 'react';
 import { Task } from '@/lib/types';
 
-export default function TaskCard({ task }: { task: Task }) {
+interface TaskCardProps {
+	task: Task;
+	onDelete?: (taskId: string) => void;
+	showDeleteButton?: boolean;
+}
+
+export default function TaskCard({
+	task,
+	onDelete,
+	showDeleteButton = false,
+}: TaskCardProps) {
 	return (
 		<div className='card bg-base-100 border shadow-sm hover:shadow-md transition'>
 			<div className='card-body'>
-				<div className='flex justify-between items-center'>
+				<div className='flex justify-between items-start'>
 					<h2 className='card-title'>{task.task}</h2>
-					<div className='badge badge-accent'>
-						<i className='fas fa-circle mr-1'></i>
-						{task.status ?? 'Open'}
+					<div className='flex flex-col items-end gap-2'>
+						<div className='badge badge-accent'>
+							<i className='fas fa-circle mr-1'></i>
+							{task.status ?? 'Open'}
+						</div>
+						{/* Sharing indicators */}
+						{task.isPublic && (
+							<div className='badge badge-info badge-sm'>
+								<i className='fas fa-globe mr-1'></i>
+								Public
+							</div>
+						)}
+						{task.sharedWith && task.sharedWith.length > 0 && (
+							<div className='badge badge-warning badge-sm'>
+								<i className='fas fa-share-alt mr-1'></i>
+								Shared
+							</div>
+						)}
 					</div>
 				</div>
 				<p className='text-base-content/70'>
@@ -44,6 +69,18 @@ export default function TaskCard({ task }: { task: Task }) {
 							timeZone: 'UTC',
 						}).format(new Date(task.dueDate))}
 					</p>
+				)}
+
+				{/* Action buttons */}
+				{showDeleteButton && onDelete && (
+					<div className='card-actions justify-end mt-4'>
+						<button
+							onClick={() => onDelete(task._id)}
+							className='btn btn-error btn-sm'>
+							<i className='fas fa-trash mr-2'></i>
+							Delete Task
+						</button>
+					</div>
 				)}
 			</div>
 		</div>
