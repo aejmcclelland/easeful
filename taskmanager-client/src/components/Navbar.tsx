@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import type { User } from '@/lib/types';
@@ -9,7 +9,11 @@ export default function Navbar() {
 	const [me, setMe] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => setMounted(true), []);
 
 	// Lock body scroll when mobile menu is open
@@ -26,6 +30,23 @@ export default function Navbar() {
 		window.addEventListener('focus', getMe);
 		return () => window.removeEventListener('focus', getMe);
 	}, []);
+
+	// Close desktop dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsDesktopDropdownOpen(false);
+			}
+		};
+
+		if (isDesktopDropdownOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isDesktopDropdownOpen]);
 
 	const getMe = async () => {
 		try {
@@ -61,6 +82,51 @@ export default function Navbar() {
 
 	const toggleMobileMenu = () => {
 		setIsMobileMenuOpen(!isMobileMenuOpen);
+	};
+
+	const toggleDesktopDropdown = () => {
+		setIsDesktopDropdownOpen(!isDesktopDropdownOpen);
+	};
+
+	const handleAvatarUpload = async (file: File) => {
+		setIsUploading(true);
+		try {
+			const formData = new FormData();
+			formData.append('avatar', file);
+
+			const res = await fetch('/api/auth/updateavatar', {
+				method: 'PUT',
+				credentials: 'include',
+				body: formData,
+			});
+
+			if (res.ok) {
+				const data = await res.json();
+				setMe(data.data);
+				setIsDesktopDropdownOpen(false);
+			} else {
+				console.error('Error uploading avatar:', res.statusText);
+			}
+		} catch (error) {
+			console.error('Error uploading avatar:', error);
+		} finally {
+			setIsUploading(false);
+		}
+	};
+
+	const triggerFileInput = () => {
+		fileInputRef.current?.click();
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file && file.type.startsWith('image/')) {
+			handleAvatarUpload(file);
+		}
+		// Reset the file input
+		if (event.target) {
+			event.target.value = '';
+		}
 	};
 
 	return (
@@ -121,35 +187,72 @@ export default function Navbar() {
 				{loading ? (
 					<div className='loading loading-spinner loading-sm'></div>
 				) : me ? (
-					<div className='dropdown dropdown-end'>
-						<div
-							tabIndex={0}
-							role='button'
-							className='btn bg-primary btn-ghost btn-circle avatar'>
-							<div className=' bg-w-10 rounded-full'>
-								<i className='fas fa-user text-xl'></i>
+					<div className='relative' ref={dropdownRef}>
+						<button
+							onClick={toggleDesktopDropdown}
+							className='btn btn-ghost btn-circle avatar'>
+							<div className='w-10 rounded-full overflow-hidden'>
+								{me.avatar?.url ? (
+									<img
+										src={me.avatar.url}
+										alt={me.name || me.email}
+										className='w-full h-full object-cover'
+									/>
+								) : (
+									<div className='w-full h-full bg-primary flex items-center justify-center'>
+										<i className='fas fa-user text-primary-content'></i>
+									</div>
+								)}
 							</div>
-						</div>
-						<ul
-							tabIndex={0}
-							className='menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52'>
-							<li className='menu-title'>
-								<span className='text-sm font-medium'>
-									<i className='fas fa-user-tag mr-2'></i>
-									{me.name || me.email}
-								</span>
-							</li>
-							<li>
-								<button onClick={handleLogout} className='text-error'>
-									<i className='fas fa-sign-out-alt mr-2 bg-success'></i>
-									Logout
-								</button>
-							</li>
-						</ul>
+						</button>
+						
+						{isDesktopDropdownOpen && (
+							<div className='absolute right-0 top-12 z-50 bg-base-100 border border-base-300 shadow-xl rounded-lg min-w-52'>
+								<div className='p-4 space-y-2'>
+									<div className='px-2 py-1 text-sm font-medium text-base-content/70 border-b border-base-300 pb-2'>
+										<i className='fas fa-user-tag mr-2'></i>
+										{me.name || me.email}
+									</div>
+									<button
+										onClick={triggerFileInput}
+										disabled={isUploading}
+										className='w-full text-left px-2 py-2 rounded-lg text-base-content hover:bg-base-200 transition-colors disabled:opacity-50'>
+										{isUploading ? (
+											<>
+												<div className='loading loading-spinner loading-xs mr-3'></div>
+												Uploading...
+											</>
+										) : (
+											<>
+												<i className='fas fa-camera mr-3'></i>
+												{me.avatar?.url ? 'Change Avatar' : 'Upload Avatar'}
+											</>
+										)}
+									</button>
+									<button
+										onClick={() => {
+											handleLogout();
+											setIsDesktopDropdownOpen(false);
+										}}
+										className='w-full text-left px-2 py-2 rounded-lg text-base-content hover:bg-error hover:text-error-content transition-colors'>
+										<i className='fas fa-sign-out-alt mr-3'></i>
+										Logout
+									</button>
+								</div>
+							</div>
+						)}
+						
+						<input
+							ref={fileInputRef}
+							type='file'
+							accept='image/*'
+							onChange={handleFileChange}
+							className='hidden'
+						/>
 					</div>
 				) : (
-					<Link href='/login' className='btn btn-primary btn-sm text-success'>
-						<i className='fas fa-sign-in-alt mr-2 text-primary'></i>
+					<Link href='/login' className='btn btn-primary btn-sm'>
+						<i className='fas fa-sign-in-alt mr-2'></i>
 						Login
 					</Link>
 				)}
@@ -197,17 +300,50 @@ export default function Navbar() {
 										</div>
 									) : me ? (
 										<div className='space-y-2'>
-											<div className='px-4 py-2 text-sm font-medium text-base-content/70'>
-												<i className='fas fa-user-tag mr-2'></i>
-												{me.name || me.email}
+											<div className='flex items-center px-4 py-2'>
+												<div className='w-8 h-8 rounded-full overflow-hidden mr-3'>
+													{me.avatar?.url ? (
+														<img
+															src={me.avatar.url}
+															alt={me.name || me.email}
+															className='w-full h-full object-cover'
+														/>
+													) : (
+														<div className='w-full h-full bg-primary flex items-center justify-center'>
+															<i className='fas fa-user text-xs text-primary-content'></i>
+														</div>
+													)}
+												</div>
+												<span className='text-sm font-medium text-base-content/70'>
+													{me.name || me.email}
+												</span>
 											</div>
+											<button
+												onClick={() => {
+													triggerFileInput();
+													setIsMobileMenuOpen(false);
+												}}
+												disabled={isUploading}
+												className='block w-full text-left px-4 py-2 rounded-lg text-base-content hover:bg-base-200 transition-colors disabled:opacity-50'>
+												{isUploading ? (
+													<>
+														<div className='loading loading-spinner loading-xs mr-3'></div>
+														Uploading...
+													</>
+												) : (
+													<>
+														<i className='fas fa-camera mr-3'></i>
+														{me.avatar?.url ? 'Change Avatar' : 'Upload Avatar'}
+													</>
+												)}
+											</button>
 											<button
 												onClick={() => {
 													handleLogout();
 													setIsMobileMenuOpen(false);
 												}}
-												className='block w-full text-left px-4 py-2 rounded-lg text-base-content hover:bg-error hover:text-error-content transition-colors bg-accent'>
-												<i className='fas fa-sign-out-alt mr-3 text-base-content'></i>
+												className='block w-full text-left px-4 py-2 rounded-lg text-base-content hover:bg-error hover:text-error-content transition-colors'>
+												<i className='fas fa-sign-out-alt mr-3'></i>
 												Logout
 											</button>
 										</div>

@@ -3,6 +3,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const sendEmail = require('../utils/sendEmail');
 const User = require('../models/User');
+const { cloudinary } = require('../cloudinary');
 
 //@desc     register user
 //@route    POST /api/auth/register
@@ -179,6 +180,87 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 	await user.save();
 
 	sendTokenResponse(user, 200, res);
+});
+
+//@desc     Update avatar
+//@route    PUT /api/auth/updateavatar
+//@access   Private
+exports.updateAvatar = asyncHandler(async (req, res, next) => {
+	console.log('updateAvatar called');
+	console.log('req.files:', req.files);
+	console.log('req.body:', req.body);
+
+	const user = await User.findById(req.user.id);
+
+	if (!user) {
+		return next(new ErrorResponse('User not found', 404));
+	}
+
+	// Check if file was uploaded using express-fileupload
+	if (!req.files || !req.files.avatar) {
+		return next(new ErrorResponse('Please upload an image file', 400));
+	}
+
+	const file = req.files.avatar;
+
+	// Make sure the image is a photo
+	if (!file.mimetype.startsWith('image')) {
+		return next(new ErrorResponse('Please upload an image file', 400));
+	}
+
+	// Check filesize
+	if (file.size > process.env.FILE_UPLOAD_LIMIT) {
+		return next(
+			new ErrorResponse(
+				`Please upload an image less than ${process.env.FILE_UPLOAD_LIMIT}`,
+				400
+			)
+		);
+	}
+
+	// Delete old avatar from cloudinary if it exists
+	if (user.avatar && user.avatar.public_id) {
+		try {
+			await cloudinary.uploader.destroy(user.avatar.public_id);
+		} catch (error) {
+			console.log('Error deleting old avatar:', error);
+		}
+	}
+
+	try {
+		// Upload new avatar to cloudinary
+		const result = await cloudinary.uploader.upload_stream(
+			{
+				folder: 'TaskManager/avatars',
+				public_id: `avatar_${user._id}_${Date.now()}`,
+			},
+			async (error, result) => {
+				if (error) {
+					console.error('Error uploading to cloudinary:', error);
+					return next(new ErrorResponse('Problem with file upload', 500));
+				}
+
+				// Update user with new avatar
+				user.avatar = {
+					public_id: result.public_id,
+					url: result.secure_url,
+				};
+
+				await user.save();
+
+				res.status(200).json({
+					success: true,
+					data: user,
+				});
+			}
+		);
+
+		// Pipe the file buffer to cloudinary
+		result.end(file.data);
+	} catch (error) {
+		console.error('Error uploading avatar:', error);
+		return next(new ErrorResponse('Problem with file upload', 500));
+	}
 });
 
 //Get token from model, create cookie and send response

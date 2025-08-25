@@ -30,6 +30,14 @@ const UserSchema = new mongoose.Schema({
 	},
 	resetPasswordToken: String,
 	resetPasswordExpire: Date,
+	avatar: {
+		public_id: {
+			type: String,
+		},
+		url: {
+			type: String,
+		},
+	},
 	createdAt: {
 		type: Date,
 		default: Date.now,

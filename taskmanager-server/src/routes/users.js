@@ -6,6 +6,7 @@ const {
 	updateUser,
 	createUser,
 	deleteUser,
+	registerUser,
 } = require('../controllers/users');
 
 const User = require('../models/User');
@@ -15,6 +16,10 @@ const router = express.Router({ mergeParams: true });
 const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
 
+// Public registration route
+router.post('/register', registerUser);
+
+// Protected admin routes
 router.use(protect);
 router.use(authorise('admin'));
 

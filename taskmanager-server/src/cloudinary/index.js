@@ -15,8 +15,8 @@ const storage = new CloudinaryStorage({
 		formats: ['jpeg', 'jpg', 'pdf', 'png'],
 		// Generate a custom filename
 		filename: (req, file, cb) => {
-			const id = req.params.id || 'new';
-			const uniqueFilename = `photo_${id}_${Date.now()}${path.extname(
+			const id = req.params.id || req.user?.id || 'new';
+			const uniqueFilename = `${file.fieldname}_${id}_${Date.now()}${path.extname(
 				file.originalname
 			)}`;
 			cb(undefined, uniqueFilename);
