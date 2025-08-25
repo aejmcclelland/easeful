@@ -59,6 +59,10 @@ const advancedResults = (model, populate) => async (req, res, next) => {
 	// Combine base query with special filters
 	const baseQuery = JSON.parse(queryStr);
 	const finalQuery = { ...baseQuery, ...specialFilters };
+	
+	console.log('advancedResults - Base query:', baseQuery);
+	console.log('advancedResults - Special filters:', specialFilters);
+	console.log('advancedResults - Final query:', finalQuery);
 
 	// Finding resource
 	query = model.find(finalQuery);

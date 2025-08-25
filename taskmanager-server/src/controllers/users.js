@@ -28,11 +28,12 @@ const sendTokenResponse = (user, statusCode, res) => {
 exports.registerUser = asyncHandler(async (req, res, next) => {
 	const { name, email, password } = req.body;
 
-	//Create user (role defaults to 'user' from schema)
+	//Create user with explicit role
 	const user = await User.create({
 		name,
 		email,
 		password,
+		role: 'user', // Explicitly set role to user
 	});
 
 	sendTokenResponse(user, 200, res);

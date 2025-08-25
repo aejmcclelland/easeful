@@ -13,11 +13,11 @@ exports.getTasks = asyncHandler(async (req, res, next) => {
 	console.log('getTasks called by user:', req.user.id, 'role:', req.user.role);
 
 	// Add user scope to query - this will be picked up by advancedResults middleware
-	// Default: ALL users can only see their own tasks
-	// There's no admin override for task visibility
+	// DEFAULT: ALL users can only see their own tasks - NO EXCEPTIONS
 	req.query.user = req.user.id;
 
-	console.log('Query params:', req.query);
+	console.log('Query params after user filter applied:', req.query);
+	console.log('User can only see tasks where user field equals:', req.user.id);
 
 	// advancedResults middleware handles the actual query, pagination, filtering, sorting
 	res.status(200).json(res.advancedResults);

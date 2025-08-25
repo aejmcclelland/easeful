@@ -16,6 +16,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 		name,
 		email,
 		password,
+		role: 'user', // Explicitly set role to user
 	});
 
 	sendTokenResponse(user, 200, res);
