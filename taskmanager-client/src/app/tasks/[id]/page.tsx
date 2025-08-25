@@ -23,6 +23,7 @@ export default function TaskDetailPage({
 				const { id } = await params;
 				const res = await fetch(`/api/taskman/${id}`, {
 					cache: 'no-store',
+					credentials: 'include',
 				});
 
 				if (res.status === 404) {
@@ -72,6 +73,7 @@ export default function TaskDetailPage({
 
 			const res = await fetch(`/api/taskman/${task._id}`, {
 				method: 'DELETE',
+				credentials: 'include',
 			});
 
 			if (!res.ok) {

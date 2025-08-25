@@ -33,6 +33,7 @@ function TasksPageContent() {
 
 			const res = await fetch(url, {
 				cache: 'no-store',
+				credentials: 'include',
 			});
 
 			if (!res.ok) {
@@ -57,6 +58,7 @@ function TasksPageContent() {
 			// Get all user tasks without pagination to extract unique labels
 			const res = await fetch('/api/taskman?limit=1000&select=labels', {
 				cache: 'no-store',
+				credentials: 'include',
 			});
 
 			if (res.ok) {
@@ -167,6 +169,7 @@ function TasksPageContent() {
 		try {
 			const res = await fetch(`/api/taskman/${taskId}`, {
 				method: 'DELETE',
+				credentials: 'include',
 			});
 
 			if (!res.ok) {
