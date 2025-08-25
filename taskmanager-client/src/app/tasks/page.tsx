@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
@@ -14,10 +14,9 @@ type SortOption =
 	| '-priority'
 	| '-status';
 
-export default function TasksPage() {
+function TasksPageContent() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 	const [pagination, setPagination] = useState<PaginationInfo | null>(null);
 	const [total, setTotal] = useState(0);
 	const [userLabels, setUserLabels] = useState<string[]>([]);
@@ -25,13 +24,7 @@ export default function TasksPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	// Fetch tasks when URL parameters change
-	useEffect(() => {
-		fetchTasks();
-		fetchUserLabels();
-	}, [searchParams]);
-
-	const fetchTasks = async () => {
+	const fetchTasks = useCallback(async () => {
 		try {
 			setLoading(true);
 			// Build query string from URL parameters
@@ -56,10 +49,10 @@ export default function TasksPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [searchParams]);
 
 	// Fetch user's unique labels for the filter chips
-	const fetchUserLabels = async () => {
+	const fetchUserLabels = useCallback(async () => {
 		try {
 			// Get all user tasks without pagination to extract unique labels
 			const res = await fetch('/api/taskman?limit=1000&select=labels', {
@@ -77,7 +70,13 @@ export default function TasksPage() {
 		} catch (error) {
 			console.error('Error fetching labels:', error);
 		}
-	};
+	}, []);
+
+	// Fetch tasks when URL parameters change
+	useEffect(() => {
+		fetchTasks();
+		fetchUserLabels();
+	}, [fetchTasks, fetchUserLabels]);
 
 	// URL parameter helpers
 	const updateURL = useCallback(
@@ -166,8 +165,6 @@ export default function TasksPage() {
 		if (!confirmed) return;
 
 		try {
-			setDeletingTaskId(taskId);
-
 			const res = await fetch(`/api/taskman/${taskId}`, {
 				method: 'DELETE',
 			});
@@ -187,8 +184,6 @@ export default function TasksPage() {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Failed to delete task';
 			toast.error(errorMessage);
-		} finally {
-			setDeletingTaskId(null);
 		}
 	};
 
@@ -444,5 +439,20 @@ export default function TasksPage() {
 				</>
 			)}
 		</div>
+	);
+}
+
+export default function TasksPage() {
+	return (
+		<Suspense fallback={
+			<div className='max-w-3xl mx-auto p-4'>
+				<div className='flex justify-center items-center py-12'>
+					<div className='loading loading-spinner loading-lg'></div>
+					<span className='ml-3 text-lg'>Loading tasks...</span>
+				</div>
+			</div>
+		}>
+			<TasksPageContent />
+		</Suspense>
 	);
 }

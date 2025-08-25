@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
 import { Task } from '@/lib/types';
 
 interface TaskCardProps {
@@ -72,14 +73,22 @@ export default function TaskCard({
 				)}
 
 				{/* Action buttons */}
-				{showDeleteButton && onDelete && (
-					<div className='card-actions justify-end mt-4'>
-						<button
-							onClick={() => onDelete(task._id)}
-							className='btn btn-error btn-sm rounded-full'>
-							<i className='fas fa-trash mr-2'></i>
-							Delete Task
-						</button>
+				{showDeleteButton && (
+					<div className='card-actions justify-end mt-4 gap-2'>
+						<Link
+							href={`/tasks/${task._id}/edit`}
+							className='btn btn-primary btn-sm rounded-full'>
+							<i className='fas fa-edit mr-2'></i>
+							Edit Task
+						</Link>
+						{onDelete && (
+							<button
+								onClick={() => onDelete(task._id)}
+								className='btn btn-error btn-sm rounded-full'>
+								<i className='fas fa-trash mr-2'></i>
+								Delete Task
+							</button>
+						)}
 					</div>
 				)}
 			</div>
