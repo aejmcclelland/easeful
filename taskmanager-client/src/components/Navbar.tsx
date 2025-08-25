@@ -28,7 +28,12 @@ export default function Navbar() {
 		getMe();
 		// Refresh user data when window gains focus
 		window.addEventListener('focus', getMe);
-		return () => window.removeEventListener('focus', getMe);
+		// Refresh user data when profile is updated
+		window.addEventListener('userProfileUpdated', getMe);
+		return () => {
+			window.removeEventListener('focus', getMe);
+			window.removeEventListener('userProfileUpdated', getMe);
+		};
 	}, []);
 
 	// Close desktop dropdown when clicking outside
@@ -229,6 +234,13 @@ export default function Navbar() {
 											</>
 										)}
 									</button>
+									<Link
+										href='/profile'
+										onClick={() => setIsDesktopDropdownOpen(false)}
+										className='w-full text-left px-2 py-2 rounded-lg text-base-content hover:bg-base-200 transition-colors block'>
+										<i className='fas fa-user-edit mr-3'></i>
+										Edit Profile
+									</Link>
 									<button
 										onClick={() => {
 											handleLogout();
@@ -337,6 +349,13 @@ export default function Navbar() {
 													</>
 												)}
 											</button>
+											<Link
+												href='/profile'
+												onClick={() => setIsMobileMenuOpen(false)}
+												className='block w-full text-left px-4 py-2 rounded-lg text-base-content hover:bg-base-200 transition-colors'>
+												<i className='fas fa-user-edit mr-3'></i>
+												Edit Profile
+											</Link>
 											<button
 												onClick={() => {
 													handleLogout();
