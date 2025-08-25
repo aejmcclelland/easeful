@@ -9,25 +9,19 @@ A full-stack task management application built with modern web technologies. Tas
 #### 🔐 Authentication & User Management
 - **User Registration & Login**: Simple account creation with secure authentication
 - **Avatar Upload**: Personalized user profiles with custom avatar images
-- **Password Reset**: Secure password recovery via email
 - **Profile Management**: Update user details and change passwords
-- **Role-Based Access**: User, Publisher, and Admin roles with appropriate permissions
+- **Role-Based Access**: User and Admin roles with appropriate permissions
 
 #### 📋 Task Management
 - **Create Tasks**: Add tasks with title, description, priority, and due dates
 - **Task Status Tracking**: Monitor progress with Pending, In Progress, and Completed statuses
 - **Priority Levels**: Organize tasks by Low, Medium, and High priority
 - **Labels/Tags**: Categorize tasks with custom labels
-- **Image Attachments**: Upload multiple images per task using cloud storage
-- **Location Integration**: Add addresses and GPS coordinates to location-based tasks
-- **Task Sharing**: Share tasks with other users
-- **Public/Private Tasks**: Control task visibility
 
 #### 🎨 User Interface
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Dark/Light Theme Support**: Modern UI with DaisyUI components
 - **Interactive Navigation**: Clean navbar with user dropdown menus
-- **Mobile-First Design**: Optimized mobile experience with touch-friendly interface
 
 ### Advanced Features
 
