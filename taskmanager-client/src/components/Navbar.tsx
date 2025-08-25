@@ -125,8 +125,8 @@ export default function Navbar() {
 						<div
 							tabIndex={0}
 							role='button'
-							className='btn btn-ghost btn-circle avatar'>
-							<div className='w-10 rounded-full'>
+							className='btn bg-primary btn-ghost btn-circle avatar'>
+							<div className=' bg-w-10 rounded-full'>
 								<i className='fas fa-user text-xl'></i>
 							</div>
 						</div>
@@ -206,15 +206,15 @@ export default function Navbar() {
 													handleLogout();
 													setIsMobileMenuOpen(false);
 												}}
-												className='block w-full text-left px-4 py-2 rounded-lg text-error hover:bg-error hover:text-error-content transition-colors bg-accent'>
-												<i className='fas fa-sign-out-alt mr-3 text-primary'></i>
+												className='block w-full text-left px-4 py-2 rounded-lg text-base-content hover:bg-error hover:text-error-content transition-colors bg-accent'>
+												<i className='fas fa-sign-out-alt mr-3 text-base-content'></i>
 												Logout
 											</button>
 										</div>
 									) : (
 										<Link
 											href='/login'
-											className='block w-full text-left px-4 py-2 rounded-lg bg-primary text-primary-content hover:bg-primary-focus transition-colors'
+											className='block w-full text-left px-4 py-2 rounded-lg bg-accent text-base-content hover:bg-error transition-colors'
 											onClick={() => setIsMobileMenuOpen(false)}>
 											<i className='fas fa-sign-in-alt mr-3'></i>
 											Login
