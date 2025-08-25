@@ -9,7 +9,6 @@ export default function RegisterPage() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
-	const [role, setRole] = useState('user');
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const router = useRouter();
@@ -36,7 +35,7 @@ export default function RegisterPage() {
 			const res = await fetch(`/api/users/register`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name, email, password, role }),
+				body: JSON.stringify({ name, email, password }),
 				credentials: 'include',
 			});
 
@@ -97,14 +96,6 @@ export default function RegisterPage() {
 					required
 					disabled={loading}
 				/>
-				<select
-					className='select select-bordered w-full'
-					value={role}
-					onChange={(e) => setRole(e.target.value)}
-					disabled={loading}>
-					<option value='user'>User</option>
-					<option value='publisher'>Publisher</option>
-				</select>
 				{error && <p className='text-red-500 text-sm'>{error}</p>}
 				<button
 					type='submit'

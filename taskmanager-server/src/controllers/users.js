@@ -26,14 +26,13 @@ const sendTokenResponse = (user, statusCode, res) => {
 //@route    POST /api/users/register
 //@access   Public
 exports.registerUser = asyncHandler(async (req, res, next) => {
-	const { name, email, password, role } = req.body;
+	const { name, email, password } = req.body;
 
-	//Create user
+	//Create user (role defaults to 'user' from schema)
 	const user = await User.create({
 		name,
 		email,
 		password,
-		role,
 	});
 
 	sendTokenResponse(user, 200, res);

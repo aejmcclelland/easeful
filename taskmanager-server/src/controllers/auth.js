@@ -9,14 +9,13 @@ const { cloudinary } = require('../cloudinary');
 //@route    POST /api/auth/register
 //@access   Public
 exports.register = asyncHandler(async (req, res, next) => {
-	const { name, email, password, role } = req.body;
+	const { name, email, password } = req.body;
 
-	//Create user
+	//Create user (role defaults to 'user' from schema)
 	const user = await User.create({
 		name,
 		email,
 		password,
-		role,
 	});
 
 	sendTokenResponse(user, 200, res);

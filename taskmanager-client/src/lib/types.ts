@@ -47,7 +47,7 @@ export type User = {
 	_id: string;
 	name: string;
 	email: string;
-	role: 'user' | 'publisher' | 'admin' | string;
+	role: 'user' | 'publisher' | 'admin';
 	avatar?: {
 		public_id: string;
 		url: string;
