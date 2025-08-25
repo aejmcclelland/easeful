@@ -12,31 +12,18 @@ const upload = multer({ storage: storage });
 exports.getTasks = asyncHandler(async (req, res, next) => {
 	console.log('getTasks called by user:', req.user.id, 'role:', req.user.role);
 
-	// Build query for tasks the user can see
-	let query = {};
-
-	if (req.user.role !== 'admin') {
-		// User can see:
-		// 1. Their own tasks
-		// 2. Public tasks (when you implement this feature)
-		// 3. Tasks shared with them (when you implement this feature)
-		query = {
-			user: req.user.id, // Only show user's own tasks for now
-		};
+	// Add user scope to query - this will be picked up by advancedResults middleware
+	// Default: user can only see their own tasks
+	if (req.user.role !== 'admin' || req.query.scope !== 'all') {
+		// Regular users or admin not viewing all tasks
+		req.query.user = req.user.id;
 	}
+	// Note: If user is admin and scope=all, no user filter is added
 
-	console.log('Query being executed:', JSON.stringify(query));
+	console.log('Query params:', req.query);
 
-	// Get tasks directly instead of using advancedResults middleware
-	const tasks = await Tasks.find(query).sort('-createdAt');
-
-	console.log('Found tasks count:', tasks.length);
-
-	res.status(200).json({
-		success: true,
-		count: tasks.length,
-		data: tasks,
-	});
+	// advancedResults middleware handles the actual query, pagination, filtering, sorting
+	res.status(200).json(res.advancedResults);
 });
 
 //@desc     Get one task

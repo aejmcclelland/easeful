@@ -108,6 +108,20 @@ taskSchema.pre('save', async function (next) {
 	next();
 });
 
+// Virtual field for priority ordering (High=3, Medium=2, Low=1)
+taskSchema.virtual('priorityOrder').get(function() {
+	const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+	return priorityMap[this.priority] || 2; // Default to Medium if unknown
+});
+
+// Database indexes for performance
+taskSchema.index({ user: 1, createdAt: -1 }); // Most common query: user's tasks by creation date
+taskSchema.index({ user: 1, dueDate: 1 }); // Sort by due date
+taskSchema.index({ user: 1, status: 1 }); // Filter by status
+taskSchema.index({ user: 1, priority: 1 }); // Filter/sort by priority
+taskSchema.index({ labels: 1 }); // Filter by labels (array field)
+taskSchema.index({ task: 'text', description: 'text' }); // Full-text search
+
 const Tasks = mongoose.model('Tasks', taskSchema, 'Tasks');
 
 module.exports = Tasks;

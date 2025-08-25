@@ -30,7 +30,7 @@ router.delete('/reset', resetAllTasks);
 
 router.route('/:id/photo').put(taskPhotoUpload).post(taskPhotoUpload);
 
-router.route('/').get(getTasks).post(upload.array('images', 5), createTask); // Allow up to 5 images, optional
+router.route('/').get(advancedResults(Tasks), getTasks).post(upload.array('images', 5), createTask); // Allow up to 5 images, optional
 
 router.route('/:id').get(getTask).put(updateTask).delete(deleteTask);
 

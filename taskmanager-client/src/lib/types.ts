@@ -28,11 +28,26 @@ export type Task = {
 	};
 };
 
+// Pagination details from advancedResults middleware
+export type PaginationInfo = {
+	next?: {
+		page: number;
+		limit: number;
+	};
+	prev?: {
+		page: number;
+		limit: number;
+	};
+	currentPage: number;
+	totalPages: number;
+};
+
 // Standard API wrapper your endpoints return for list/detail
 export type TasksResponse = {
 	success: boolean;
 	count: number;
-	pagination: unknown;
+	total: number;
+	pagination: PaginationInfo;
 	data: Task[];
 };
 

@@ -76,7 +76,7 @@ export default function TaskCard({
 					<div className='card-actions justify-end mt-4'>
 						<button
 							onClick={() => onDelete(task._id)}
-							className='btn btn-error btn-sm'>
+							className='btn btn-error btn-sm rounded-full'>
 							<i className='fas fa-trash mr-2'></i>
 							Delete Task
 						</button>
