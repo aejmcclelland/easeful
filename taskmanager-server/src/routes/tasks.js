@@ -22,6 +22,7 @@ const router = express.Router();
 const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
 const userScope = require('../middleware/userScope');
+const { taskValidation, taskQueryValidation } = require('../middleware/validation');
 
 // Require authentication for all task routes
 router.use(protect);
@@ -31,9 +32,9 @@ router.delete('/reset', resetAllTasks);
 
 router.route('/:id/photo').put(taskPhotoUpload).post(taskPhotoUpload);
 
-router.route('/').get(userScope, advancedResults(Tasks), getTasks).post(upload.array('images', 5), createTask); // Allow up to 5 images, optional
+router.route('/').get(userScope, taskQueryValidation, advancedResults(Tasks), getTasks).post(upload.array('images', 5), taskValidation, createTask); // Allow up to 5 images, optional
 
-router.route('/:id').get(getTask).put(updateTask).delete(deleteTask);
+router.route('/:id').get(getTask).put(taskValidation, updateTask).delete(deleteTask);
 
 // Sharing routes
 router.put('/:id/share', shareTask);

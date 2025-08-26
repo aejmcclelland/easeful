@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { CreateTaskSchema, validateData, formatValidationErrors } from '@/lib/validation';
 
 export default function NewTaskPage() {
 	const [formData, setFormData] = useState({
@@ -15,26 +16,26 @@ export default function NewTaskPage() {
 		labels: '',
 	});
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [errors, setErrors] = useState<Record<string, string>>({});
 	const router = useRouter();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError(null);
+		setErrors({});
 		setLoading(true);
 
 		try {
-			// Convert labels string to array
-			const labelsArray = formData.labels
-				.split(',')
-				.map((label) => label.trim())
-				.filter((label) => label.length > 0);
+			// Validate form data with Zod
+			const validation = validateData(CreateTaskSchema, formData);
+			
+			if (!validation.success) {
+				setErrors(formatValidationErrors(validation.errors));
+				setLoading(false);
+				toast.error('Please fix the errors below');
+				return;
+			}
 
-			const taskData = {
-				...formData,
-				labels: labelsArray,
-				dueDate: formData.dueDate || undefined,
-			};
+			const taskData = validation.data;
 
 			const res = await fetch('/api/taskman', {
 				method: 'POST',
@@ -57,7 +58,7 @@ export default function NewTaskPage() {
 			router.push(`/tasks/${data.data._id}`);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Failed to create task';
-			setError(msg);
+			setErrors({ general: msg });
 			toast.error(msg);
 		} finally {
 			setLoading(false);
@@ -92,11 +93,15 @@ export default function NewTaskPage() {
 						name='task'
 						value={formData.task}
 						onChange={handleChange}
-						className='input input-bordered w-full'
+						className={`input input-bordered w-full ${errors.task ? 'input-error' : ''}`}
 						placeholder='Enter task name'
-						required
 						maxLength={150}
 					/>
+					{errors.task && (
+						<label className='label'>
+							<span className='label-text-alt text-error'>{errors.task}</span>
+						</label>
+					)}
 				</div>
 
 				<div className='form-control'>
@@ -107,11 +112,15 @@ export default function NewTaskPage() {
 						name='description'
 						value={formData.description}
 						onChange={handleChange}
-						className='textarea textarea-bordered w-full'
+						className={`textarea textarea-bordered w-full ${errors.description ? 'textarea-error' : ''}`}
 						placeholder='Describe your task'
-						required
 						rows={4}
 					/>
+					{errors.description && (
+						<label className='label'>
+							<span className='label-text-alt text-error'>{errors.description}</span>
+						</label>
+					)}
 				</div>
 
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -155,8 +164,13 @@ export default function NewTaskPage() {
 						name='dueDate'
 						value={formData.dueDate}
 						onChange={handleChange}
-						className='input input-bordered w-full'
+						className={`input input-bordered w-full ${errors.dueDate ? 'input-error' : ''}`}
 					/>
+					{errors.dueDate && (
+						<label className='label'>
+							<span className='label-text-alt text-error'>{errors.dueDate}</span>
+						</label>
+					)}
 				</div>
 
 				<div className='form-control'>
@@ -168,20 +182,26 @@ export default function NewTaskPage() {
 						name='labels'
 						value={formData.labels}
 						onChange={handleChange}
-						className='input input-bordered w-full'
+						className={`input input-bordered w-full ${errors.labels ? 'input-error' : ''}`}
 						placeholder='Enter labels separated by commas'
 					/>
-					<label className='label'>
-						<span className='label-text-alt'>
-							Separate multiple labels with commas
-						</span>
-					</label>
+					{errors.labels ? (
+						<label className='label'>
+							<span className='label-text-alt text-error'>{errors.labels}</span>
+						</label>
+					) : (
+						<label className='label'>
+							<span className='label-text-alt'>
+								Separate multiple labels with commas (max 10 labels, 50 chars each)
+							</span>
+						</label>
+					)}
 				</div>
 
-				{error && (
+				{errors.general && (
 					<div className='alert alert-error'>
 						<i className='fas fa-exclamation-triangle text-lg'></i>
-						<span>{error}</span>
+						<span>{errors.general}</span>
 					</div>
 				)}
 
