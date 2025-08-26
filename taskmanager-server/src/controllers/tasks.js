@@ -10,16 +10,8 @@ const upload = multer({ storage: storage });
 //@route    GET /api/taskman
 //@access   Private
 exports.getTasks = asyncHandler(async (req, res, next) => {
-	console.log('getTasks called by user:', req.user.id, 'role:', req.user.role);
-
-	// Add user scope to query - this will be picked up by advancedResults middleware
-	// DEFAULT: ALL users can only see their own tasks - NO EXCEPTIONS
-	req.query.user = req.user.id;
-
-	console.log('Query params after user filter applied:', req.query);
-	console.log('User can only see tasks where user field equals:', req.user.id);
-
-	// advancedResults middleware handles the actual query, pagination, filtering, sorting
+	// userScope middleware has already added the user filter
+	// advancedResults middleware has already executed the user-scoped query
 	res.status(200).json(res.advancedResults);
 });
 

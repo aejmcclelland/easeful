@@ -59,10 +59,11 @@ const advancedResults = (model, populate) => async (req, res, next) => {
 	// Combine base query with special filters
 	const baseQuery = JSON.parse(queryStr);
 	const finalQuery = { ...baseQuery, ...specialFilters };
-	
-	console.log('advancedResults - Base query:', baseQuery);
-	console.log('advancedResults - Special filters:', specialFilters);
-	console.log('advancedResults - Final query:', finalQuery);
+
+	// CRITICAL: Verify user filter is present for security
+	if (!finalQuery.user) {
+		console.error('SECURITY ALERT: No user filter in query! This will show all tasks!');
+	}
 
 	// Finding resource
 	query = model.find(finalQuery);
@@ -110,6 +111,14 @@ const advancedResults = (model, populate) => async (req, res, next) => {
 
 	if (populate) {
 		query = query.populate(populate);
+	}
+
+	// FINAL SECURITY CHECK: Verify query includes user filter
+	const mongoQuery = query.getQuery();
+	
+	if (!mongoQuery.user) {
+		console.error('SECURITY ERROR: Query missing user filter!');
+		throw new Error('Security error: Query missing user filter');
 	}
 
 	// Executing query
