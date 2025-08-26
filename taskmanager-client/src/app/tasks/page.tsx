@@ -41,9 +41,12 @@ function TasksPageContent() {
 			}
 
 			const json: TasksResponse = await res.json();
-			setTasks(json.data ?? []);
+			const tasksData = json.data ?? [];
+			setTasks(tasksData);
 			setPagination(json.pagination);
 			setTotal(json.total || 0);
+			
+			// Note: Labels will be updated by the updateLabelsFromTasks useEffect
 		} catch (error) {
 			console.error('Error fetching tasks:', error);
 			toast.error('Failed to load tasks');
@@ -52,33 +55,6 @@ function TasksPageContent() {
 		}
 	}, [searchParams]);
 
-	// Fetch user's unique labels for the filter chips
-	const fetchUserLabels = useCallback(async () => {
-		try {
-			// Get all user tasks without pagination to extract unique labels
-			const res = await fetch('/api/taskman?limit=1000&select=labels', {
-				cache: 'no-store',
-				credentials: 'include',
-			});
-
-			if (res.ok) {
-				const json: TasksResponse = await res.json();
-				const allLabels = new Set<string>();
-				json.data.forEach((task) => {
-					task.labels?.forEach((label) => allLabels.add(label));
-				});
-				setUserLabels(Array.from(allLabels).sort());
-			}
-		} catch (error) {
-			console.error('Error fetching labels:', error);
-		}
-	}, []);
-
-	// Fetch tasks when URL parameters change
-	useEffect(() => {
-		fetchTasks();
-		fetchUserLabels();
-	}, [fetchTasks, fetchUserLabels]);
 
 	// URL parameter helpers
 	const updateURL = useCallback(
@@ -113,10 +89,30 @@ function TasksPageContent() {
 
 	// Get current filter values from URL
 	const getFilterValue = (key: string): string => searchParams.get(key) || '';
-	const getFilterArray = (key: string): string[] => {
+	const getFilterArray = useCallback((key: string): string[] => {
 		const value = searchParams.get(key);
 		return value ? value.split(',').map((v) => v.trim()) : [];
-	};
+	}, [searchParams]);
+
+	// Helper function to update available labels from current tasks
+	const updateLabelsFromTasks = useCallback((tasks: Task[]) => {
+		const labels = new Set<string>();
+		tasks.forEach((task) => {
+			task.labels?.forEach((label) => labels.add(label));
+		});
+		const labelsArray = Array.from(labels).sort();
+		setUserLabels(labelsArray);
+
+		// Check if any active label filters are no longer valid
+		const activeLabels = getFilterArray('labels');
+		const invalidLabels = activeLabels.filter(label => !labels.has(label));
+		
+		if (invalidLabels.length > 0) {
+			// Remove invalid labels from active filters
+			const validActiveLabels = activeLabels.filter(label => labels.has(label));
+			updateURL({ labels: validActiveLabels });
+		}
+	}, [getFilterArray, updateURL]);
 
 	// Filter handlers
 	const handleSortChange = (sort: SortOption) => {
@@ -177,8 +173,12 @@ function TasksPageContent() {
 				throw new Error(errorData.error || 'Failed to delete task');
 			}
 
-			// Remove task from local state
-			setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
+			// Remove task from local state and update labels
+			setTasks((prevTasks) => {
+				const updatedTasks = prevTasks.filter((task) => task._id !== taskId);
+				updateLabelsFromTasks(updatedTasks);
+				return updatedTasks;
+			});
 
 			// Show success toast
 			toast.success('Task deleted successfully!');
@@ -189,6 +189,16 @@ function TasksPageContent() {
 			toast.error(errorMessage);
 		}
 	};
+
+	// Fetch tasks when URL parameters change
+	useEffect(() => {
+		fetchTasks();
+	}, [fetchTasks]);
+
+	// Update labels whenever tasks change
+	useEffect(() => {
+		updateLabelsFromTasks(tasks);
+	}, [tasks, updateLabelsFromTasks]);
 
 	if (loading) {
 		return (
