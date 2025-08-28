@@ -24,4 +24,4 @@ yarn-error.log*
 .vscode/
 
 # ai
-CLAUDE.md
+CLAUDE.local.md

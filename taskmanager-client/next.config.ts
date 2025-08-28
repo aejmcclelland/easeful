@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
+	images: {
+		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: 'res.cloudinary.com',
+				port: '',
+				pathname: '/**',
+			},
+		],
+	},
 	// For development, we can also set the port to avoid conflicts
 	// This is optional but can help with cookie issues
 	experimental: {

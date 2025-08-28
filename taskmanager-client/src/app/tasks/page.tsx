@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
+import SearchBar from '@/components/SearchBar';
+import LabelFilter from '@/components/LabelFilter';
+import TaskFilters from '@/components/TaskFilters';
+import EmptyState from '@/components/EmptyState';
+import Pagination from '@/components/Pagination';
 import type { Task, TasksResponse, PaginationInfo } from '@/lib/types';
 
 type SortOption =
@@ -236,108 +241,24 @@ function TasksPageContent() {
 			</div>
 
 			{/* Search Bar */}
-			<div className='mb-4'>
-				<div className='form-control'>
-					<input
-						type='text'
-						placeholder='Search tasks...'
-						className='input input-bordered w-full'
-						value={searchQuery}
-						onChange={(e) => handleSearchChange(e.target.value)}
-					/>
-				</div>
-			</div>
+			<SearchBar value={searchQuery} onChange={handleSearchChange} />
 
 			{/* Labels Filter Chips */}
-			{userLabels.length > 0 && (
-				<div className='mb-4'>
-					<h3 className='text-sm font-medium mb-2'>Filter by labels:</h3>
-					<div className='flex flex-wrap gap-2'>
-						{userLabels.map((label) => (
-							<button
-								key={label}
-								onClick={() => handleLabelToggle(label)}
-								className={`badge badge-lg cursor-pointer transition-colors ${
-									activeLabels.includes(label)
-										? 'badge-primary'
-										: 'badge-outline hover:badge-primary'
-								}`}>
-								{label}
-							</button>
-						))}
-					</div>
-				</div>
-			)}
+			<LabelFilter
+				labels={userLabels}
+				activeLabels={activeLabels}
+				onToggle={handleLabelToggle}
+			/>
 
 			{/* Sort and Status Filters */}
-			<div className='mb-4 flex flex-wrap justify-between items-end gap-4'>
-				<div className='flex flex-wrap gap-4 items-end'>
-					{/* Sort Dropdown */}
-					<div className='form-control'>
-						<label className='label'>
-							<span className='label-text text-sm'>Sort by</span>
-						</label>
-						<select
-							className='select select-bordered select-sm rounded-full'
-							value={currentSort}
-							onChange={(e) => handleSortChange(e.target.value as SortOption)}>
-							<option value='-createdAt'>Newest first</option>
-							<option value='createdAt'>Oldest first</option>
-							<option value='dueDate'>Due date (soonest first)</option>
-							<option value='-priority'>Priority (High first)</option>
-							<option value='-status'>Status</option>
-						</select>
-					</div>
-
-					{/* Clear Filters */}
-					{hasActiveFilters() && (
-						<div className='form-control'>
-							<label className='label'>
-								<span className='label-text text-sm'>&nbsp;</span>
-							</label>
-							<button
-								onClick={clearAllFilters}
-								className='btn btn-outline btn-sm rounded-full'>
-								Clear filters
-							</button>
-						</div>
-					)}
-				</div>
-
-				{/* Status Filter - Right aligned */}
-				<div className='form-control'>
-					<details className='dropdown dropdown-end'>
-						<summary className='btn btn-outline btn-sm rounded-full'>
-							Status {activeStatuses.length > 0 && `(${activeStatuses.length})`}
-						</summary>
-						<div className='dropdown-content z-20 menu p-4 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 mt-2'>
-							<div className='mb-2'>
-								<h4 className='font-medium text-sm text-base-content/70'>
-									Select statuses
-								</h4>
-							</div>
-							{['Pending', 'In Progress', 'Completed'].map((status) => (
-								<label
-									key={status}
-									className='label cursor-pointer py-2 hover:bg-base-200 rounded px-2'>
-									<span className='label-text'>{status}</span>
-									<input
-										type='checkbox'
-										className='checkbox checkbox-sm'
-										checked={activeStatuses.includes(status)}
-										onChange={(e) => {
-											const newStatuses = e.target.checked
-												? [...activeStatuses, status]
-												: activeStatuses.filter((s) => s !== status);
-											handleStatusFilter(newStatuses);
-										}}
-									/>
-								</label>
-							))}
-						</div>
-					</details>
-				</div>
-			</div>
+			<TaskFilters
+				currentSort={currentSort}
+				activeStatuses={activeStatuses}
+				hasActiveFilters={hasActiveFilters()}
+				onSortChange={handleSortChange}
+				onStatusFilter={handleStatusFilter}
+				onClearFilters={clearAllFilters}
+			/>
 
 			{/* Loading State */}
 			{loading ? (
@@ -347,45 +268,10 @@ function TasksPageContent() {
 				</div>
 			) : tasks.length === 0 ? (
 				/* Empty State */
-				<div className='text-center py-12'>
-					<div className='max-w-md mx-auto'>
-						<div className='mb-4'>
-							<i className='fas fa-clipboard text-6xl text-gray-400'></i>
-						</div>
-						{hasActiveFilters() ? (
-							<>
-								<h3 className='text-lg font-medium text-gray-900 mb-2'>
-									No tasks match your filters
-								</h3>
-								<p className='text-gray-500 mb-6'>
-									Try adjusting your search criteria or clear the filters.
-								</p>
-								<button
-									onClick={clearAllFilters}
-									className='btn btn-primary rounded-full'>
-									<i className='fas fa-times mr-2'></i>
-									Clear filters
-								</button>
-							</>
-						) : (
-							<>
-								<h3 className='text-lg font-medium text-gray-900 mb-2'>
-									No tasks yet
-								</h3>
-								<p className='text-gray-500 mb-6'>
-									Get started by creating your first task. You can organize your
-									work, set priorities, and track progress.
-								</p>
-								<Link
-									href='/tasks/new'
-									className='btn btn-primary rounded-full'>
-									<i className='fas fa-plus mr-2'></i>
-									Create Your First Task
-								</Link>
-							</>
-						)}
-					</div>
-				</div>
+				<EmptyState
+					hasActiveFilters={hasActiveFilters()}
+					onClearFilters={clearAllFilters}
+				/>
 			) : (
 				/* Task List and Pagination */
 				<>
@@ -402,52 +288,15 @@ function TasksPageContent() {
 					</ul>
 
 					{/* Pagination Controls */}
-					{pagination && pagination.totalPages > 1 && (
-						<div className='flex flex-col sm:flex-row justify-between items-center gap-4'>
-							<div className='text-sm text-base-content/70'>
-								Page {currentPage} of {pagination.totalPages}
-								{total > 0 && ` (${total} total)`}
-							</div>
-
-							<div className='flex items-center gap-2'>
-								{/* Page Size Selector */}
-								<div className='form-control'>
-									<select
-										className='select select-bordered select-sm rounded-full'
-										value={currentLimit}
-										onChange={(e) =>
-											handlePageSizeChange(parseInt(e.target.value))
-										}>
-										<option value={10}>10 per page</option>
-										<option value={20}>20 per page</option>
-										<option value={50}>50 per page</option>
-									</select>
-								</div>
-
-								{/* Pagination Buttons */}
-								<div className='join'>
-									<button
-										className='join-item btn btn-sm rounded-l-full'
-										disabled={!pagination.prev}
-										onClick={() =>
-											pagination.prev && handlePageChange(pagination.prev.page)
-										}>
-										<i className='fas fa-chevron-left'></i>
-									</button>
-									<button className='join-item btn btn-sm'>
-										{currentPage}
-									</button>
-									<button
-										className='join-item btn btn-sm rounded-r-full'
-										disabled={!pagination.next}
-										onClick={() =>
-											pagination.next && handlePageChange(pagination.next.page)
-										}>
-										<i className='fas fa-chevron-right'></i>
-									</button>
-								</div>
-							</div>
-						</div>
+					{pagination && (
+						<Pagination
+							pagination={pagination}
+							currentPage={currentPage}
+							currentLimit={currentLimit}
+							total={total}
+							onPageChange={handlePageChange}
+							onPageSizeChange={handlePageSizeChange}
+						/>
 					)}
 				</>
 			)}
