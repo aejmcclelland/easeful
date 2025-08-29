@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
+import RequireAuth from '@/components/RequireAuth';
 import type { Task, TaskResponse } from '@/lib/types';
 
 export default function TaskDetailPage({
@@ -96,10 +97,10 @@ export default function TaskDetailPage({
 
 	if (loading) {
 		return (
-			<div className='max-w-screen-md mx-auto p-4 space-y-4'>
-				<div className='flex justify-center items-center py-12'>
+			<div className='max-w-4xl mx-auto p-6'>
+				<div className='flex justify-center items-center py-16'>
 					<div className='loading loading-spinner loading-lg'></div>
-					<span className='ml-3 text-lg'>Loading task...</span>
+					<span className='ml-3 text-xl'>Loading task...</span>
 				</div>
 			</div>
 		);
@@ -107,12 +108,13 @@ export default function TaskDetailPage({
 
 	if (!task) {
 		return (
-			<div className='max-w-screen-md mx-auto p-4 space-y-4'>
-				<Link href='/tasks' className='link link-hover text-sm'>
-					{'\u2190'} Back to tasks
+			<div className='max-w-4xl mx-auto p-6'>
+				<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full mb-6'>
+					<i className='fas fa-arrow-left mr-2'></i>
+					Back to tasks
 				</Link>
-				<div className='alert alert-error'>
-					<i className='fas fa-exclamation-triangle text-lg'></i>
+				<div className='alert alert-error text-lg'>
+					<i className='fas fa-exclamation-triangle text-xl'></i>
 					<span>Task not found</span>
 				</div>
 			</div>
@@ -120,9 +122,11 @@ export default function TaskDetailPage({
 	}
 
 	return (
-		<div className='max-w-screen-md mx-auto p-4 space-y-4'>
-			<Link href='/tasks' className='link link-hover text-sm'>
-				{'\u2190'} Back to tasks
+		<RequireAuth>
+			<div className='max-w-4xl mx-auto p-6 space-y-6'>
+			<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full'>
+				<i className='fas fa-arrow-left mr-2'></i>
+				Back to tasks
 			</Link>
 
 			<TaskCard
@@ -138,5 +142,6 @@ export default function TaskDetailPage({
 				</div>
 			)}
 		</div>
+		</RequireAuth>
 	);
 }

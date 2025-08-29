@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import DesktopUserMenu from './DesktopUserMenu';
 import MobileMenu from './MobileMenu';
 import MobileHamburgerButton from './MobileHamburgerButton';
@@ -101,10 +103,10 @@ export default function Navbar() {
 			<div className='navbar-start'>
 				{/* Logo */}
 				<div className='dropdown'>
-					<div className='btn btn-ghost text-xl font-bold'>
+					<Link href='/' className='btn btn-ghost text-xl font-bold'>
 						<i className='fas fa-clipboard-list mr-2'></i>
 						Taskman
-					</div>
+					</Link>
 				</div>
 
 				{/* Desktop Navigation */}
@@ -128,7 +130,7 @@ export default function Navbar() {
 
 			{/* Mobile Menu Button */}
 			<div className='navbar-end lg:hidden'>
-				<MobileHamburgerButton 
+				<MobileHamburgerButton
 					isOpen={isMobileMenuOpen}
 					onClick={toggleMobileMenu}
 				/>
@@ -149,8 +151,7 @@ export default function Navbar() {
 						onLogout={handleLogout}
 					/>
 				) : (
-					<Link href='/login' className='btn btn-primary btn-sm'>
-						<i className='fas fa-sign-in-alt mr-2'></i>
+					<Link href='/login' className='btn btn-primary btn-sm rounded-full'>
 						Login
 					</Link>
 				)}

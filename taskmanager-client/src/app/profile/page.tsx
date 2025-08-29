@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle, faSave } from '@fortawesome/free-solid-svg-icons';
 import type { User } from '@/lib/types';
 
 export default function ProfilePage() {
@@ -124,7 +126,7 @@ export default function ProfilePage() {
 		return (
 			<div className='max-w-2xl mx-auto p-4'>
 				<div className='alert alert-error'>
-					<i className='fas fa-exclamation-triangle text-lg'></i>
+					<FontAwesomeIcon icon={faExclamationTriangle} style={{ width: '18px', height: '18px' }} />
 					<span>{error}</span>
 				</div>
 				<Link href='/tasks' className='btn btn-primary mt-4 rounded-full'>
@@ -186,7 +188,7 @@ export default function ProfilePage() {
 
 						{error && (
 							<div className='alert alert-error'>
-								<i className='fas fa-exclamation-triangle text-lg'></i>
+								<FontAwesomeIcon icon={faExclamationTriangle} style={{ width: '18px', height: '18px' }} />
 								<span>{error}</span>
 							</div>
 						)}
@@ -209,7 +211,7 @@ export default function ProfilePage() {
 									</>
 								) : (
 									<>
-										<i className='fas fa-save mr-2'></i>
+										<FontAwesomeIcon icon={faSave} style={{ marginRight: '8px' }} />
 										Save Changes
 									</>
 								)}

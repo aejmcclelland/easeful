@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -11,7 +11,31 @@ export default function RegisterPage() {
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [checkingAuth, setCheckingAuth] = useState(true);
 	const router = useRouter();
+
+	// Check if user is already authenticated
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const res = await fetch('/api/auth/me', {
+					credentials: 'include',
+				});
+				
+				if (res.ok) {
+					// User is already authenticated, redirect to tasks
+					router.push('/tasks');
+					return;
+				}
+			} catch (err) {
+				// User not authenticated, continue with registration form
+			} finally {
+				setCheckingAuth(false);
+			}
+		};
+
+		checkAuth();
+	}, [router]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -44,8 +68,8 @@ export default function RegisterPage() {
 				throw new Error(errorData.error || 'Registration failed');
 			}
 
-			// success → go home & refresh so Navbar updates
-			router.push('/');
+			// success → go to tasks & refresh so Navbar updates
+			router.push('/tasks');
 			window.location.reload();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Registration failed';
@@ -55,9 +79,14 @@ export default function RegisterPage() {
 		}
 	};
 
+	// Don't render anything while checking auth to prevent flash
+	if (checkingAuth) {
+		return null;
+	}
+
 	return (
 		<div className='max-w-md mx-auto p-6'>
-			<h1 className='text-2xl font-bold mb-4'>Create Account</h1>
+			<h1 className='text-3xl font-bold mb-6 text-center'>Create Account</h1>
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<input
 					type='text'
@@ -99,14 +128,14 @@ export default function RegisterPage() {
 				{error && <p className='text-red-500 text-sm'>{error}</p>}
 				<button
 					type='submit'
-					className='btn btn-primary w-full'
+					className='btn btn-primary btn-lg w-full rounded-full'
 					disabled={loading}>
 					{loading ? 'Creating Account...' : 'Create Account'}
 				</button>
 			</form>
-			<p className='text-center mt-4 text-sm'>
+			<p className='text-center mt-6 text-base'>
 				Already have an account?{' '}
-				<Link href='/login' className='link link-primary'>
+				<Link href='/login' className='link link-primary font-semibold'>
 					Login here
 				</Link>
 			</p>

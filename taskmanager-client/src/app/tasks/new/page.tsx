@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import RequireAuth from '@/components/RequireAuth';
 import { CreateTaskSchema, validateData, formatValidationErrors } from '@/lib/validation';
 
 export default function NewTaskPage() {
@@ -75,7 +78,8 @@ export default function NewTaskPage() {
 	};
 
 	return (
-		<div className='max-w-2xl mx-auto p-4'>
+		<RequireAuth>
+			<div className='max-w-2xl mx-auto p-4'>
 			<div className='mb-6'>
 				<Link href='/tasks' className='link link-hover text-sm'>
 					{'\u2190'} Back to tasks
@@ -200,7 +204,7 @@ export default function NewTaskPage() {
 
 				{errors.general && (
 					<div className='alert alert-error'>
-						<i className='fas fa-exclamation-triangle text-lg'></i>
+						<FontAwesomeIcon icon={faExclamationTriangle} style={{ width: '18px', height: '18px' }} />
 						<span>{errors.general}</span>
 					</div>
 				)}
@@ -218,5 +222,6 @@ export default function NewTaskPage() {
 				</div>
 			</form>
 		</div>
+		</RequireAuth>
 	);
 }

@@ -1,15 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 
 export default function LoginPage() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [checkingAuth, setCheckingAuth] = useState(true);
 	const router = useRouter();
+
+	// Check if user is already authenticated
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const res = await fetch('/api/auth/me', {
+					credentials: 'include',
+				});
+				
+				if (res.ok) {
+					// User is already authenticated, redirect to tasks
+					router.push('/tasks');
+					return;
+				}
+			} catch (err) {
+				// User not authenticated, continue with login form
+			} finally {
+				setCheckingAuth(false);
+			}
+		};
+
+		checkAuth();
+	}, [router]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -29,8 +55,8 @@ export default function LoginPage() {
 				throw new Error(errorData.error || 'Invalid credentials');
 			}
 
-			// success → go home & refresh so Navbar updates
-			router.push('/');
+			// success → go to tasks & refresh so Navbar updates
+			router.push('/tasks');
 			// Force a hard refresh to ensure cookies are properly set
 			window.location.reload();
 		} catch (err) {
@@ -41,9 +67,14 @@ export default function LoginPage() {
 		}
 	};
 
+	// Don't render anything while checking auth to prevent flash
+	if (checkingAuth) {
+		return null;
+	}
+
 	return (
 		<div className='max-w-md mx-auto p-6'>
-			<h1 className='text-2xl font-bold mb-4'>Login</h1>
+			<h1 className='text-3xl font-bold mb-6 text-center'>Login</h1>
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<input
 					type='email'
@@ -66,14 +97,21 @@ export default function LoginPage() {
 				{error && <p className='text-red-500 text-sm'>{error}</p>}
 				<button
 					type='submit'
-					className='btn btn-primary w-full'
+					className='btn btn-primary btn-lg w-full rounded-full'
 					disabled={loading}>
-					{loading ? 'Logging in...' : 'Login'}
+					{loading ? (
+						'Logging in...'
+					) : (
+						<>
+							<FontAwesomeIcon icon={faSignInAlt} />
+							Login
+						</>
+					)}
 				</button>
 			</form>
-			<p className='text-center mt-4 text-sm'>
+			<p className='text-center mt-6 text-base'>
 				Don&apos;t have an account?{' '}
-				<Link href='/register' className='link link-primary'>
+				<Link href='/register' className='link link-primary font-semibold'>
 					Register here
 				</Link>
 			</p>

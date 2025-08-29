@@ -17,6 +17,12 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang='en' data-theme='corporate'>
+			<head>
+				<script
+					src='https://kit.fontawesome.com/641c2545bf.js'
+					crossOrigin='anonymous'
+					async></script>
+			</head>
 			<body className='min-h-dvh bg-base-100'>
 				<Navbar />
 				<main className='container mx-auto p-4'>{children}</main>
