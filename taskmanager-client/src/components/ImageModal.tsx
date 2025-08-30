@@ -93,22 +93,25 @@ export default function ImageModal({
 					<FontAwesomeIcon icon={faTimes} />
 				</button>
 
-				{/* Previous Button */}
+				{/* Large clickable areas for navigation */}
 				{hasMultipleImages && onPrevious && currentIndex > 0 && (
-					<button
+					<div
 						onClick={onPrevious}
-						className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost bg-black bg-opacity-50 text-white hover:bg-opacity-70'>
-						<FontAwesomeIcon icon={faChevronLeft} />
-					</button>
+						className='absolute left-0 top-0 w-1/4 h-full z-10 cursor-pointer flex items-center justify-start pl-4'>
+						<div className='w-16 h-16 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110'>
+							<FontAwesomeIcon icon={faChevronLeft} size="lg" />
+						</div>
+					</div>
 				)}
 
-				{/* Next Button */}
 				{hasMultipleImages && onNext && currentIndex < images.length - 1 && (
-					<button
+					<div
 						onClick={onNext}
-						className='absolute right-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost bg-black bg-opacity-50 text-white hover:bg-opacity-70'>
-						<FontAwesomeIcon icon={faChevronRight} />
-					</button>
+						className='absolute right-0 top-0 w-1/4 h-full z-10 cursor-pointer flex items-center justify-end pr-4'>
+						<div className='w-16 h-16 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110'>
+							<FontAwesomeIcon icon={faChevronRight} size="lg" />
+						</div>
+					</div>
 				)}
 
 				{/* Image */}

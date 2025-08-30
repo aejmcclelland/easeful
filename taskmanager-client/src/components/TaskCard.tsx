@@ -146,6 +146,17 @@ export default function TaskCard({
 					)}
 				</div>
 			</div>
+			
+			{/* Image Modal */}
+			<ImageModal
+				isOpen={isOpen}
+				onClose={closeModal}
+				images={images}
+				currentIndex={currentIndex}
+				onNext={nextImage}
+				onPrevious={previousImage}
+				title={task.task}
+			/>
 		</div>
 	);
 }

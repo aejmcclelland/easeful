@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImage, faTimes, faUpload } from '@fortawesome/free-solid-svg-icons';
+import ImageModal from './ImageModal';
+import { useImageModal } from '@/hooks/useImageModal';
 
 interface ImageUploadFormProps {
 	selectedFiles: File[];
@@ -20,6 +22,7 @@ export default function ImageUploadForm({
 	onDeleteExisting 
 }: ImageUploadFormProps) {
 	const [dragOver, setDragOver] = useState(false);
+	const { isOpen, currentIndex, openModal, closeModal, nextImage, previousImage, images } = useImageModal();
 
 	const totalImages = existingImages.length + selectedFiles.length;
 	const canAddMore = totalImages < maxImages;
@@ -80,6 +83,12 @@ export default function ImageUploadForm({
 		setDragOver(false);
 	};
 
+	const handleImageClick = (index: number) => {
+		if (existingImages.length > 0) {
+			openModal(existingImages, index);
+		}
+	};
+
 	return (
 		<div className='form-control'>
 			<label className='label'>
@@ -93,18 +102,19 @@ export default function ImageUploadForm({
 				<div className='mb-4'>
 					<p className='text-sm font-medium mb-2'>Current Images:</p>
 					<div className='grid grid-cols-3 gap-2'>
-						{existingImages.map((image) => (
+						{existingImages.map((image, index) => (
 							<div key={image.public_id} className='relative group'>
 								<img
 									src={image.url.replace('/upload/', '/upload/w_120,h_90,c_fill,q_auto,f_auto/')}
 									alt='Task image'
-									className='w-full h-20 object-cover rounded border'
+									className='w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity'
+									onClick={() => handleImageClick(index)}
 								/>
 								{onDeleteExisting && (
 									<button
 										type='button'
 										onClick={() => onDeleteExisting(image.public_id)}
-										className='absolute top-1 right-1 btn btn-error btn-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity'>
+										className='absolute top-1 right-1 btn btn-error btn-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10'>
 										<FontAwesomeIcon icon={faTimes} style={{ width: '10px', height: '10px' }} />
 									</button>
 								)}
@@ -175,6 +185,17 @@ export default function ImageUploadForm({
 					<span>Maximum {maxImages} images reached</span>
 				</div>
 			)}
+
+			{/* Image Modal */}
+			<ImageModal
+				isOpen={isOpen}
+				onClose={closeModal}
+				images={images}
+				currentIndex={currentIndex}
+				onNext={nextImage}
+				onPrevious={previousImage}
+				title='Task Image'
+			/>
 		</div>
 	);
 }
