@@ -21,14 +21,14 @@ export default function UserAvatar({ user, size = 'md', className = '' }: UserAv
 	};
 
 	return (
-		<div className={`${sizeClasses[size]} rounded-full overflow-hidden ${className}`}>
+		<div className={`${sizeClasses[size]} rounded-full overflow-hidden ${className} relative`}>
 			{user.avatar?.url ? (
 				<Image 
 					src={user.avatar.url}
 					alt={user.name || user.email}
-					className='w-full h-full object-cover'
-					width={size === 'lg' ? 64 : size === 'md' ? 40 : 32}
-					height={size === 'lg' ? 64 : size === 'md' ? 40 : 32}
+					fill
+					className='object-cover'
+					sizes={size === 'lg' ? '64px' : size === 'md' ? '40px' : '32px'}
 				/>
 			) : (
 				<div className='w-full h-full bg-primary flex items-center justify-center'>

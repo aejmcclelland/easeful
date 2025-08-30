@@ -2,6 +2,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Task } from '@/lib/types';
+import ImageModal from './ImageModal';
+import { useImageModal } from '@/hooks/useImageModal';
 
 interface TaskCardProps {
 	task: Task;
@@ -14,13 +16,21 @@ export default function TaskCard({
 	onDelete,
 	showDeleteButton = false,
 }: TaskCardProps) {
+	const { isOpen, currentIndex, openModal, closeModal, nextImage, previousImage, images } = useImageModal();
 	const handleCardClick = (e: React.MouseEvent) => {
-		// Don't navigate if clicking on action buttons
+		// Don't navigate if clicking on action buttons or image thumbnails
 		const target = e.target as HTMLElement;
-		if (target.closest('.action-buttons')) {
+		if (target.closest('.action-buttons') || target.closest('.image-thumbnail')) {
 			return;
 		}
 		window.location.href = `/tasks/${task._id}`;
+	};
+
+	const handleImageClick = (e: React.MouseEvent, index: number) => {
+		e.stopPropagation(); // Prevent card click
+		if (task.images && task.images.length > 0) {
+			openModal(task.images, index);
+		}
 	};
 
 	return (
@@ -82,6 +92,35 @@ export default function TaskCard({
 								timeZone: 'UTC',
 							}).format(new Date(task.dueDate))}
 						</p>
+					)}
+
+					{/* Image thumbnails */}
+					{task.images && task.images.length > 0 && (
+						<div className='flex gap-1 mt-2'>
+							{task.images.slice(0, 3).map((image, index) => (
+								<div 
+									key={image.public_id || index} 
+									className='relative image-thumbnail cursor-pointer hover:opacity-80 transition-opacity'
+									onClick={(e) => handleImageClick(e, index)}
+								>
+									<img
+										src={image.url.replace('/upload/', '/upload/w_60,h_45,c_fill,q_auto,f_auto/')}
+										alt={`Task image ${index + 1}`}
+										className='w-15 h-11 object-cover rounded border'
+									/>
+								</div>
+							))}
+							{task.images.length > 3 && (
+								<div 
+									className='w-15 h-11 bg-base-200 rounded border flex items-center justify-center image-thumbnail cursor-pointer hover:opacity-80 transition-opacity'
+									onClick={(e) => handleImageClick(e, 3)}
+								>
+									<span className='text-xs text-base-content/70'>
+										+{task.images.length - 3}
+									</span>
+								</div>
+							)}
+						</div>
 					)}
 
 					{/* Action buttons positioned in bottom-right corner of card-body */}

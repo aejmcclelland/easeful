@@ -9,7 +9,13 @@ export type Task = {
 	priority?: 'Low' | 'Medium' | 'High' | string;
 	dueDate?: string; // ISO string from API
 	labels?: string[];
-	images?: { url: string; filename?: string }[];
+	images?: { 
+		public_id: string; 
+		url: string; 
+		width?: number; 
+		height?: number; 
+		bytes?: number; 
+	}[];
 	slug?: string;
 	createdAt?: string;
 	updatedAt?: string;

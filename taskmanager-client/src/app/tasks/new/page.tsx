@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import RequireAuth from '@/components/RequireAuth';
+import ImageUploadForm from '@/components/ImageUploadForm';
 import { CreateTaskSchema, validateData, formatValidationErrors } from '@/lib/validation';
 
 export default function NewTaskPage() {
@@ -18,6 +19,7 @@ export default function NewTaskPage() {
 		dueDate: '',
 		labels: '',
 	});
+	const [selectedImages, setSelectedImages] = useState<File[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const router = useRouter();
@@ -40,10 +42,24 @@ export default function NewTaskPage() {
 
 			const taskData = validation.data;
 
+			// Create FormData for file upload
+			const formDataToSend = new FormData();
+			
+			// Add task data
+			Object.entries(taskData).forEach(([key, value]) => {
+				if (value !== undefined && value !== '') {
+					formDataToSend.append(key, value.toString());
+				}
+			});
+
+			// Add images
+			selectedImages.forEach((file) => {
+				formDataToSend.append('images', file);
+			});
+
 			const res = await fetch('/api/taskman', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(taskData),
+				body: formDataToSend,
 				credentials: 'include',
 			});
 
@@ -201,6 +217,12 @@ export default function NewTaskPage() {
 						</label>
 					)}
 				</div>
+
+				{/* Image Upload */}
+				<ImageUploadForm
+					selectedFiles={selectedImages}
+					onFilesChange={setSelectedImages}
+				/>
 
 				{errors.general && (
 					<div className='alert alert-error'>

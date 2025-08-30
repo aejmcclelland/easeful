@@ -5,7 +5,6 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const colors = require('colors');
-const fileupload = require('express-fileupload');
 const mongoSanitize = require('express-mongo-sanitize');
 const errorHandler = require('./src/middleware/error');
 const cors = require('cors');
@@ -49,8 +48,10 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 }
 
-//Body parser
-app.use(express.json());
+//Body parser - only parse JSON for application/json requests
+app.use(express.json({ 
+	type: 'application/json'
+}));
 //Cookie parser
 app.use(cookieParser());
 // Sanatise data
@@ -69,12 +70,12 @@ const limiter = rateLimit({
 app.use(limiter);
 //Prevent http param pollution
 app.use(hpp());
-//Limit file upload size
-app.use(
-	fileupload({
-		limits: { fileSize: parseInt(process.env.FILE_UPLOAD_LIMIT) },
-	})
-);
+// Commented out express-fileupload as we're using multer for file uploads
+// app.use(
+// 	fileupload({
+// 		limits: { fileSize: parseInt(process.env.FILE_UPLOAD_LIMIT) },
+// 	})
+// );
 //Route files
 const tasks = require('./src/routes/tasks');
 const auth = require('./src/routes/auth');

@@ -33,8 +33,17 @@ const taskSchema = new mongoose.Schema(
 		},
 		images: [
 			{
-				url: String,
-				filename: String,
+				public_id: {
+					type: String,
+					required: true,
+				},
+				url: {
+					type: String,
+					required: true,
+				},
+				width: Number,
+				height: Number,
+				bytes: Number,
 			},
 		],
 		address: {

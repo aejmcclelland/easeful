@@ -72,6 +72,136 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 	}
 });
 
+//@desc     Upload images for task
+//@route    PUT /api/taskman/:id/photo
+//@access   Private
+exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
+
+	const task = await Tasks.findById(req.params.id);
+
+	if (!task) {
+		return next(
+			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
+		);
+	}
+
+	// Make sure user is task owner or admin
+	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorized to update this task`,
+				401
+			)
+		);
+	}
+
+	// Check current image count
+	const currentCount = task.images ? task.images.length : 0;
+	const maxImages = 6;
+	
+	if (currentCount >= maxImages) {
+		return next(
+			new ErrorResponse(`Task already has maximum ${maxImages} images`, 400)
+		);
+	}
+
+	// Check if files were uploaded
+	if (!req.files || req.files.length === 0) {
+		return next(new ErrorResponse('Please upload at least one file', 400));
+	}
+
+	// Check if upload would exceed limit
+	const uploadCount = req.files.length;
+	if (currentCount + uploadCount > maxImages) {
+		return next(
+			new ErrorResponse(
+				`Can only upload ${maxImages - currentCount} more images (${uploadCount} provided)`,
+				400
+			)
+		);
+	}
+
+	try {
+		// Process uploaded images from Cloudinary
+		const newImages = req.files.map(file => ({
+			public_id: file.filename, // Cloudinary returns filename as the public_id
+			url: file.path, // Cloudinary returns path as the secure URL
+			width: file.width || undefined,
+			height: file.height || undefined,
+			bytes: file.size || undefined
+		}));
+
+		// Add new images to existing ones
+		const updatedImages = [...(task.images || []), ...newImages];
+
+		// Update task with new images
+		const updatedTask = await Tasks.findByIdAndUpdate(
+			req.params.id,
+			{ images: updatedImages },
+			{ new: true, runValidators: true }
+		);
+
+		res.status(200).json({
+			success: true,
+			count: newImages.length,
+			data: updatedTask
+		});
+	} catch (error) {
+		console.error('Error uploading images:', error);
+		return next(new ErrorResponse('Problem with file upload', 500));
+	}
+});
+
+//@desc     Delete single image from task
+//@route    DELETE /api/taskman/:id/photo/:public_id
+//@access   Private
+exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
+	const task = await Tasks.findById(req.params.id);
+
+	if (!task) {
+		return next(
+			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
+		);
+	}
+
+	// Make sure user is task owner or admin
+	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorized to update this task`,
+				401
+			)
+		);
+	}
+
+	const { public_id } = req.params;
+
+	// Find the image in the task
+	const imageIndex = task.images.findIndex(img => img.public_id === public_id);
+	
+	if (imageIndex === -1) {
+		return next(new ErrorResponse('Image not found', 404));
+	}
+
+	try {
+		// Delete from Cloudinary
+		const cloudinary = require('cloudinary').v2;
+		await cloudinary.uploader.destroy(public_id);
+
+		// Remove from task
+		task.images.splice(imageIndex, 1);
+		await task.save();
+
+		res.status(200).json({
+			success: true,
+			data: task
+		});
+	} catch (error) {
+		console.error('Error deleting image:', error);
+		return next(new ErrorResponse('Problem deleting image', 500));
+	}
+});
+
 //@desc     Update task
 //@route    PUT /api/taskman/:id
 //@access   Private
@@ -133,63 +263,6 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ success: true, data: {} });
 });
 
-//@desc     Update task
-//@route    PUT /api/taskman/:id/photo
-//@access   Private
-exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
-	upload.array('image')(req, res, async function (err) {
-		if (err) {
-			return next(new ErrorResponse('Error during image upload', 500));
-		}
-
-		try {
-			const task = await Tasks.findById(req.params.id);
-			if (!task) {
-				return next(
-					new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
-				);
-			}
-
-			// Make sure user is task owner
-			if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-				return next(
-					new ErrorResponse(
-						`User ${req.user.id} is not authorized to update this task`,
-						401
-					)
-				);
-			}
-
-			if (!req.files) {
-				return next(new ErrorResponse(`Please upload a file`, 400));
-			}
-
-			const file = req.files.file;
-
-			// Make sure the image is a photo
-			if (!file.mimetype.startsWith('image')) {
-				return next(new ErrorResponse(`Please upload an image file`, 400));
-			}
-			//Check the file size
-			if (file.size > parseInt(process.env.FILE_UPLOAD_LIMIT) * 1024 * 1024) {
-				return next(
-					new ErrorResponse(
-						`File size exceeds the ${parseInt(
-							process.env.FILE_UPLOAD_LIMIT
-						)}MB limit`,
-						400
-					)
-				);
-			}
-			console.log('Task:', task);
-			console.log(req.body, req.file);
-			res.send('Image uploaded successfully!');
-		} catch (err) {
-			console.error('Error during image upload:', err);
-			return next(new ErrorResponse('Error during image upload', 500));
-		}
-	});
-});
 
 //@desc     Reset all tasks (DEVELOPMENT ONLY)
 //@route    DELETE /api/taskman/reset

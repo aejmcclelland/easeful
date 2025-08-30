@@ -18,6 +18,7 @@ export default function TaskDetailPage({
 	const [deleting, setDeleting] = useState(false);
 	const router = useRouter();
 
+
 	useEffect(() => {
 		const fetchTask = async () => {
 			try {

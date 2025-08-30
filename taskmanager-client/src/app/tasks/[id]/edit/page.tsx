@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import RequireAuth from '@/components/RequireAuth';
+import ImageUploadForm from '@/components/ImageUploadForm';
 import type { Task } from '@/lib/types';
 
 export default function EditTaskPage() {
@@ -18,6 +19,8 @@ export default function EditTaskPage() {
 		dueDate: '',
 		labels: '',
 	});
+	const [selectedImages, setSelectedImages] = useState<File[]>([]);
+	const [existingImages, setExistingImages] = useState<{ public_id: string; url: string }[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [fetchingTask, setFetchingTask] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -51,6 +54,9 @@ export default function EditTaskPage() {
 						: '',
 					labels: task.labels ? task.labels.join(', ') : '',
 				});
+
+				// Set existing images
+				setExistingImages(task.images || []);
 			} catch (err) {
 				const msg = err instanceof Error ? err.message : 'Failed to fetch task';
 				setError(msg);
@@ -64,6 +70,27 @@ export default function EditTaskPage() {
 			fetchTask();
 		}
 	}, [taskId]);
+
+	const handleDeleteImage = async (publicId: string) => {
+		try {
+			const res = await fetch(`/api/taskman/${taskId}/photo/${publicId}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.error || 'Failed to delete image');
+			}
+
+			// Remove from local state
+			setExistingImages(prev => prev.filter(img => img.public_id !== publicId));
+			toast.success('Image deleted successfully');
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : 'Failed to delete image';
+			toast.error(msg);
+		}
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -83,9 +110,12 @@ export default function EditTaskPage() {
 				dueDate: formData.dueDate || undefined,
 			};
 
+			// First, update the task data with JSON
 			const res = await fetch(`/api/taskman/${taskId}`, {
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+				},
 				body: JSON.stringify(taskData),
 				credentials: 'include',
 			});
@@ -93,6 +123,32 @@ export default function EditTaskPage() {
 			if (!res.ok) {
 				const errorData = await res.json();
 				throw new Error(errorData.error || 'Failed to update task');
+			}
+
+			// If there are new images, upload them separately
+			if (selectedImages.length > 0) {
+				// Validate files before upload
+				const validFiles = selectedImages.filter(file => file && file instanceof File && file.size > 0);
+				
+				if (validFiles.length === 0) {
+					console.warn('No valid files to upload');
+				} else {
+					const imageFormData = new FormData();
+					validFiles.forEach((file) => {
+						imageFormData.append('images', file);
+					});
+
+					const imageRes = await fetch(`/api/taskman/${taskId}/photo`, {
+						method: 'PUT',
+						body: imageFormData,
+						credentials: 'include',
+					});
+					
+					if (!imageRes.ok) {
+						const errorData = await imageRes.json();
+						throw new Error(errorData.error || 'Failed to upload images');
+					}
+				}
 			}
 
 			// Show success toast
@@ -248,6 +304,14 @@ export default function EditTaskPage() {
 						</span>
 					</label>
 				</div>
+
+				{/* Image Upload */}
+				<ImageUploadForm
+					selectedFiles={selectedImages}
+					onFilesChange={setSelectedImages}
+					existingImages={existingImages}
+					onDeleteExisting={handleDeleteImage}
+				/>
 
 				{error && (
 					<div className='alert alert-error'>

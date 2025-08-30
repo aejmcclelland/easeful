@@ -130,3 +130,7 @@ The project uses a dual-layer validation approach:
 
 ### Client (.env.local)
 - `NEXT_PUBLIC_API_BASE`: Backend API URL (defaults to http://localhost:3000)
+
+# Additional Instructions
+
+- When adding new features or the task images, ensure to use this @/imageContent.md  

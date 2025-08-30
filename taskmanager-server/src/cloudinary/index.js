@@ -1,6 +1,5 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const path = require('path');
 
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,14 +11,13 @@ const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: 'TaskManager',
-		formats: ['jpeg', 'jpg', 'pdf', 'png'],
-		// Generate a custom filename
-		filename: (req, file, cb) => {
+		allowed_formats: ['jpeg', 'jpg', 'png', 'pdf'],
+		// Generate a custom public_id instead of filename
+		public_id: (req, file) => {
 			const id = req.params.id || req.user?.id || 'new';
-			const uniqueFilename = `${file.fieldname}_${id}_${Date.now()}${path.extname(
-				file.originalname
-			)}`;
-			cb(undefined, uniqueFilename);
+			const timestamp = Date.now();
+			const name = file.originalname.split('.')[0]; // Remove extension
+			return `${file.fieldname}_${id}_${timestamp}_${name}`;
 		},
 	},
 });

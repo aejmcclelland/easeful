@@ -11,7 +11,7 @@ export default function Home() {
 	return (
 		<div className='min-h-screen'>
 			{/* Hero Section */}
-			<section className='hero min-h-[60vh] bg-gradient-to-br from-primary/10 to-secondary/10'>
+			<section className='hero min-h-[60vh]  from-primary/10 to-secondary/10'>
 				<div className='hero-content text-center'>
 					<div className='max-w-4xl'>
 						<h1 className='text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent'>

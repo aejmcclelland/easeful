@@ -10,6 +10,7 @@ const {
 	updateTask,
 	deleteTask,
 	taskPhotoUpload,
+	deleteTaskImage,
 	resetAllTasks,
 	shareTask,
 	togglePublic,
@@ -30,7 +31,9 @@ router.use(protect);
 // Reset route (DEVELOPMENT ONLY)
 router.delete('/reset', resetAllTasks);
 
-router.route('/:id/photo').put(taskPhotoUpload).post(taskPhotoUpload);
+
+router.route('/:id/photo').put(upload.array('images', 6), taskPhotoUpload);
+router.route('/:id/photo/:public_id').delete(deleteTaskImage);
 
 router.route('/').get(userScope, taskQueryValidation, advancedResults(Tasks), getTasks).post(upload.array('images', 5), taskValidation, createTask); // Allow up to 5 images, optional
 
