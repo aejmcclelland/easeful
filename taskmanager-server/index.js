@@ -37,12 +37,12 @@ try {
 const allowedOrigins = [
 	'http://localhost:3000', // Next.js dev server
 	'http://localhost:3001', // React dev server (if used)
-	'https://your-production-domain.com',
+	'https://taskmanager-taskmanager-client.vercel.app',
 ];
 
 app.use(
 	cors({
-		origin: ['https://taskmanager-taskmanager-client.vercel.app'],
+		origin: allowedOrigins,
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		allowedHeaders: ['Content-Type', 'Authorization'],
 		credentials: true,
