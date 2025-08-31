@@ -106,6 +106,21 @@ export async function apiPutForm<TRes>(
 	return parseOrThrow<TRes>(res);
 }
 
+/** POST FormData (for images) -> JSON */
+export async function apiPostForm<TRes>(
+	path: string,
+	form: FormData,
+	init: RequestInit = {}
+): Promise<TRes> {
+	const res = await fetch(buildUrl(path), {
+		method: 'POST',
+		credentials: 'include',
+		body: form, // do NOT set Content-Type; browser will set boundary
+		...init,
+	});
+	return parseOrThrow<TRes>(res);
+}
+
 /** DELETE (expects JSON response) */
 export async function apiDeleteJson<TRes>(
 	path: string,
@@ -130,6 +145,31 @@ export async function apiDelete(
 		...init,
 	});
 	await parseOrThrow(res);
+}
+
+/** Convenience alias to match older imports */
+export function apiFetch<T>(
+	path: string,
+	init: RequestInit = {}
+): Promise<T> {
+	return apiGet<T>(path, init);
+}
+
+/** Convenience wrappers with TRes first */
+export function apiPost<TRes, TReq = unknown>(
+	path: string,
+	body: TReq,
+	init: RequestInit = {}
+): Promise<TRes> {
+	return apiPostJson<TReq, TRes>(path, body, init);
+}
+
+export function apiPut<TRes, TReq = unknown>(
+	path: string,
+	body: TReq,
+	init: RequestInit = {}
+): Promise<TRes> {
+	return apiPutJson<TReq, TRes>(path, body, init);
 }
 
 export { HttpError };
