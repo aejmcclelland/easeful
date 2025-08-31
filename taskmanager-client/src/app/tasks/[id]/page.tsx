@@ -7,7 +7,7 @@ import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
 import RequireAuth from '@/components/RequireAuth';
 import type { Task, TaskResponse } from '@/lib/types';
-import { apiFetch, apiDelete } from '@/lib/api';
+import { apiGet, apiDelete, HttpError } from '@/lib/api';
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ export default function TaskDetailPage() {
 
     (async () => {
       try {
-        const json = await apiFetch<TaskResponse | Task>(`/api/easeful/${id}`, {
+        const json = await apiGet<TaskResponse | Task>(`/api/easeful/${id}`, {
           cache: 'no-store',
         });
 
@@ -58,27 +58,27 @@ export default function TaskDetailPage() {
     try {
       setDeleting(true);
 
-      const res: Response = await apiDelete(`/api/easeful/${task._id}`);
-      if (!res.ok) {
-        let msg = 'Failed to delete task';
-        try {
-          const body: unknown = await res.json().catch(() => undefined);
-          if (body && typeof body === 'object') {
-            const e = body as { error?: string; message?: string };
-            msg = e.error ?? e.message ?? msg;
-          }
-        } catch {
-          // ignore JSON parse errors
-        }
-        throw new Error(msg);
-      }
+      // apiDelete throws HttpError on non-2xx and returns parsed JSON (or void).
+      await apiDelete(`/api/easeful/${task._id}`);
 
       toast.success('Task deleted successfully!');
       router.replace('/tasks');
       router.refresh();
     } catch (error) {
+      if (error instanceof HttpError) {
+        if (error.status === 401) {
+          toast.error('Please log in to delete this task');
+          router.replace('/login');
+          return;
+        }
+        if (error.status === 403) {
+          toast.error('You are not authorized to delete this task');
+          return;
+        }
+      }
       console.error('Error deleting task:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete task');
+      const msg = error instanceof Error ? error.message : 'Failed to delete task';
+      toast.error(msg);
     } finally {
       setDeleting(false);
     }
