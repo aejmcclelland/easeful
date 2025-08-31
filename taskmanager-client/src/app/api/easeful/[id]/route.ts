@@ -17,7 +17,7 @@ export async function GET(
 	}
 
 	const { id } = await params;
-	const upstream = `${API_BASE}/api/taskman/${id}`;
+	const upstream = `${API_BASE}/api/easeful/${id}`;
 
 	const headers: HeadersInit = {
 		cookie: req.headers.get('cookie') ?? '',

@@ -15,7 +15,7 @@ export default function Home() {
 				<div className='hero-content text-center'>
 					<div className='max-w-4xl'>
 						<h1 className='text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent'>
-							Organize Your Life, One Task at a Time
+							Organize Your Life, One Job at a Time
 						</h1>
 						<p className='py-6 text-xl text-base-content/80 max-w-2xl mx-auto'>
 							Transform chaos into clarity with intelligent task management.

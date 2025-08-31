@@ -39,7 +39,7 @@ export async function GET(req: Request) {
 
 // Proxy POST /api/taskman -> Express
 export async function POST(req: Request) {
-	console.log('Next.js API route POST /api/taskman called');
+	
 	try {
 		// Get the token from the request cookies
 		const token = req.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
@@ -51,33 +51,29 @@ export async function POST(req: Request) {
 			);
 		}
 
-		const upstream = `${API_BASE}/api/taskman`;
+		const upstream = `${API_BASE}/api/easeful`;
 		
 		// Handle both FormData and JSON requests
 		const contentType = req.headers.get('content-type');
-		console.log('Content-Type:', contentType);
+	
 		
 		let body;
-		let headers: HeadersInit = {
+		const headers: HeadersInit = {
 			Authorization: `Bearer ${token}`,
 			cookie: req.headers.get('cookie') ?? '',
 		};
 
 		if (contentType?.includes('multipart/form-data')) {
-			console.log('Handling FormData request');
 			// For FormData (file uploads), get the FormData and pass it through
 			const formData = await req.formData();
 			body = formData;
 			// Don't set Content-Type - let fetch set it with boundary for FormData
 		} else {
-			console.log('Handling JSON request');
 			// For JSON requests
 			const jsonBody = await req.json();
 			body = JSON.stringify(jsonBody);
 			headers['Content-Type'] = 'application/json';
 		}
-		
-		console.log('About to fetch upstream:', upstream);
 
 		const res = await fetch(upstream, {
 			method: 'POST',
@@ -85,8 +81,6 @@ export async function POST(req: Request) {
 			body,
 			duplex: 'half',
 		} as RequestInit);
-		
-		console.log('Upstream response status:', res.status);
 
 		if (!res.ok) {
 			const errorText = await res.text();

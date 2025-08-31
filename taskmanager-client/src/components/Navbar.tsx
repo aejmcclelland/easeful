@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import DesktopUserMenu from './DesktopUserMenu';
 import MobileMenu from './MobileMenu';
 import MobileHamburgerButton from './MobileHamburgerButton';
@@ -105,7 +103,7 @@ export default function Navbar() {
 				<div className='dropdown'>
 					<Link href='/' className='btn btn-ghost text-xl font-bold'>
 						<i className='fas fa-clipboard-list mr-2'></i>
-						Taskman
+						Easeful
 					</Link>
 				</div>
 
