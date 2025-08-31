@@ -187,12 +187,12 @@ describe('ImageUpload', () => {
     // Wait for upload to complete
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/taskman/507f1f77bcf86cd799439011/photo',
-        expect.objectContaining({
-          method: 'PUT',
-          credentials: 'include',
-        })
-      )
+				'/api/easeful/507f1f77bcf86cd799439011/photo',
+				expect.objectContaining({
+					method: 'PUT',
+					credentials: 'include',
+				})
+			);
     })
     
     expect(mockOnUploadSuccess).toHaveBeenCalled()

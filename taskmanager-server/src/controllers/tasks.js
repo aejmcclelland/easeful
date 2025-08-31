@@ -7,7 +7,7 @@ const { storage } = require('../cloudinary/index');
 const upload = multer({ storage: storage });
 
 //@desc     Get all tasks
-//@route    GET /api/taskman
+//@route    GET /api/easeful
 //@access   Private
 exports.getTasks = asyncHandler(async (req, res, next) => {
 	// userScope middleware has already added the user filter
@@ -16,7 +16,7 @@ exports.getTasks = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Get one task
-//@route    GET /api/taskman/:id
+//@route    GET /api/easeful/:id
 //@access   Private
 exports.getTask = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);
@@ -40,10 +40,9 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ success: true, data: task });
 });
 //@desc     Create new task
-//@route    POST /api/taskman
+//@route    POST /api/easeful
 //@access   Private
 exports.createTask = asyncHandler(async (req, res, next) => {
-	
 	try {
 		//Add user to req.body
 		req.body.user = req.user.id;
@@ -57,7 +56,7 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 					url: file.path, // Cloudinary returns path as the secure URL
 					width: file.width || undefined,
 					height: file.height || undefined,
-					bytes: file.size || undefined
+					bytes: file.size || undefined,
 				});
 			}
 		}
@@ -76,10 +75,9 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Upload images for task
-//@route    PUT /api/taskman/:id/photo
+//@route    PUT /api/easeful/:id/photo
 //@access   Private
 exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
-
 	const task = await Tasks.findById(req.params.id);
 
 	if (!task) {
@@ -101,7 +99,7 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 	// Check current image count
 	const currentCount = task.images ? task.images.length : 0;
 	const maxImages = 6;
-	
+
 	if (currentCount >= maxImages) {
 		return next(
 			new ErrorResponse(`Task already has maximum ${maxImages} images`, 400)
@@ -118,7 +116,9 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 	if (currentCount + uploadCount > maxImages) {
 		return next(
 			new ErrorResponse(
-				`Can only upload ${maxImages - currentCount} more images (${uploadCount} provided)`,
+				`Can only upload ${
+					maxImages - currentCount
+				} more images (${uploadCount} provided)`,
 				400
 			)
 		);
@@ -126,12 +126,12 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 
 	try {
 		// Process uploaded images from Cloudinary
-		const newImages = req.files.map(file => ({
+		const newImages = req.files.map((file) => ({
 			public_id: file.filename, // Cloudinary returns filename as the public_id
 			url: file.path, // Cloudinary returns path as the secure URL
 			width: file.width || undefined,
 			height: file.height || undefined,
-			bytes: file.size || undefined
+			bytes: file.size || undefined,
 		}));
 
 		// Add new images to existing ones
@@ -147,7 +147,7 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 		res.status(200).json({
 			success: true,
 			count: newImages.length,
-			data: updatedTask
+			data: updatedTask,
 		});
 	} catch (error) {
 		console.error('Error uploading images:', error);
@@ -156,7 +156,7 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Delete single image from task
-//@route    DELETE /api/taskman/:id/photo/:public_id
+//@route    DELETE /api/easeful/:id/photo/:public_id
 //@access   Private
 exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);
@@ -181,8 +181,10 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 	const decodedPublicId = decodeURIComponent(public_id);
 
 	// Find the image in the task
-	const imageIndex = task.images.findIndex(img => img.public_id === decodedPublicId);
-	
+	const imageIndex = task.images.findIndex(
+		(img) => img.public_id === decodedPublicId
+	);
+
 	if (imageIndex === -1) {
 		return next(new ErrorResponse('Image not found', 404));
 	}
@@ -198,7 +200,7 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 
 		res.status(200).json({
 			success: true,
-			data: task
+			data: task,
 		});
 	} catch (error) {
 		console.error('Error deleting image:', error);
@@ -207,7 +209,7 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Update task
-//@route    PUT /api/taskman/:id
+//@route    PUT /api/easeful/:id
 //@access   Private
 exports.updateTask = asyncHandler(async (req, res, next) => {
 	let task = await Tasks.findById(req.params.id);
@@ -241,7 +243,7 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Delete task
-//@route    DELETE /api/taskman/:id
+//@route    DELETE /api/easeful/:id
 //@access   Private
 exports.deleteTask = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);
@@ -267,9 +269,8 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ success: true, data: {} });
 });
 
-
 //@desc     Reset all tasks (DEVELOPMENT ONLY)
-//@route    DELETE /api/taskman/reset
+//@route    DELETE /api/easeful/reset
 //@access   Private (Admin only)
 exports.resetAllTasks = asyncHandler(async (req, res, next) => {
 	// Only allow in development
@@ -287,7 +288,7 @@ exports.resetAllTasks = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Share task with specific users
-//@route    PUT /api/taskman/:id/share
+//@route    PUT /api/easeful/:id/share
 //@access   Private
 exports.shareTask = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);
@@ -324,7 +325,7 @@ exports.shareTask = asyncHandler(async (req, res, next) => {
 });
 
 //@desc     Toggle task public visibility
-//@route    PUT /api/taskman/:id/toggle-public
+//@route    PUT /api/easeful/:id/toggle-public
 //@access   Private
 exports.togglePublic = asyncHandler(async (req, res, next) => {
 	const task = await Tasks.findById(req.params.id);

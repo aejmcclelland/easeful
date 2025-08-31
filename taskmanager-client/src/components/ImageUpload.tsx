@@ -67,7 +67,7 @@ export default function ImageUpload({
 				formData.append('images', file);
 			});
 
-			const res = await fetch(`/api/taskman/${taskId}/photo`, {
+			const res = await fetch(`/api/easeful/${taskId}/photo`, {
 				method: 'PUT',
 				body: formData,
 				credentials: 'include',

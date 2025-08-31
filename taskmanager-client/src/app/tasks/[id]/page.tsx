@@ -23,7 +23,7 @@ export default function TaskDetailPage({
 		const fetchTask = async () => {
 			try {
 				const { id } = await params;
-				const res = await fetch(`/api/taskman/${id}`, {
+				const res = await fetch(`/api/easeful/${id}`, {
 					cache: 'no-store',
 					credentials: 'include',
 				});
@@ -73,7 +73,7 @@ export default function TaskDetailPage({
 		try {
 			setDeleting(true);
 
-			const res = await fetch(`/api/taskman/${task._id}`, {
+			const res = await fetch(`/api/easeful/${task._id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});

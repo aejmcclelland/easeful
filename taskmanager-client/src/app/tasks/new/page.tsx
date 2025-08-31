@@ -64,7 +64,7 @@ export default function NewTaskPage() {
 				formDataToSend.append('images', file);
 			});
 
-			const res = await fetch('/api/taskman', {
+			const res = await fetch('/api/easeful', {
 				method: 'POST',
 				body: formDataToSend,
 				credentials: 'include',

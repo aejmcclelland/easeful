@@ -49,7 +49,7 @@ export async function DELETE(
 	}
 
 	const { id } = await params;
-	const upstream = `${API_BASE}/api/taskman/${id}`;
+	const upstream = `${API_BASE}/api/easeful/${id}`;
 
 	const res = await fetch(upstream, {
 		method: 'DELETE',
@@ -87,7 +87,7 @@ export async function PUT(
 
 	const { id } = await params;
 	const body = await req.json();
-	const upstream = `${API_BASE}/api/taskman/${id}`;
+	const upstream = `${API_BASE}/api/easeful/${id}`;
 
 	const res = await fetch(upstream, {
 		method: 'PUT',

@@ -35,7 +35,7 @@ function TasksPageContent() {
 			setLoading(true);
 			// Build query string from URL parameters
 			const queryString = searchParams.toString();
-			const url = queryString ? `/api/taskman?${queryString}` : '/api/taskman';
+			const url = queryString ? `/api/easeful?${queryString}` : '/api/easeful';
 
 			const res = await fetch(url, {
 				cache: 'no-store',
@@ -169,7 +169,7 @@ function TasksPageContent() {
 		if (!confirmed) return;
 
 		try {
-			const res = await fetch(`/api/taskman/${taskId}`, {
+			const res = await fetch(`/api/easeful/${taskId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3000';
 
-// Proxy GET /api/taskman -> Express
+// Proxy GET /api/easeful -> Express
 export async function GET(req: Request) {
 	// Get the token from the request cookies
 	const token = req.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 	}
 
 	const url = new URL(req.url);
-	// Preserve path and search when hitting e.g. /api/taskman?foo=bar
+	// Preserve path and search when hitting e.g. /api/easeful?foo=bar
 	const upstream = `${API_BASE}${url.pathname.replace(/^\/api/, '/api')}${
 		url.search
 	}`;
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 	});
 }
 
-// Proxy POST /api/taskman -> Express
+// Proxy POST /api/easeful -> Express
 export async function POST(req: Request) {
 	
 	try {

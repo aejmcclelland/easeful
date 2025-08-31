@@ -32,7 +32,7 @@ export default function EditTaskPage() {
 		const fetchTask = async () => {
 			try {
 				setFetchingTask(true);
-				const res = await fetch(`/api/taskman/${taskId}`, {
+				const res = await fetch(`/api/easeful/${taskId}`, {
 					credentials: 'include',
 				});
 
@@ -74,7 +74,7 @@ export default function EditTaskPage() {
 	const handleDeleteImage = async (publicId: string) => {
 		try {
 			const encodedPublicId = encodeURIComponent(publicId);
-			const res = await fetch(`/api/taskman/${taskId}/photo/${encodedPublicId}`, {
+			const res = await fetch(`/api/easeful/${taskId}/photo/${encodedPublicId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -112,7 +112,7 @@ export default function EditTaskPage() {
 			};
 
 			// First, update the task data with JSON
-			const res = await fetch(`/api/taskman/${taskId}`, {
+			const res = await fetch(`/api/easeful/${taskId}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export default function EditTaskPage() {
 						imageFormData.append('images', file);
 					});
 
-					const imageRes = await fetch(`/api/taskman/${taskId}/photo`, {
+					const imageRes = await fetch(`/api/easeful/${taskId}/photo`, {
 						method: 'PUT',
 						body: imageFormData,
 						credentials: 'include',
