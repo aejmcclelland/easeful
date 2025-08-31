@@ -1,101 +1,257 @@
-// src/lib/api.ts
+'use client';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
-if (!API_BASE) {
-  throw new Error('NEXT_PUBLIC_API_BASE is not set');
-}
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { toast } from 'react-toastify';
+import type { Task } from '@/lib/types';
+import RequireAuth from '@/components/RequireAuth';
+import ImageUploadForm from '@/components/ImageUploadForm';
+import { apiPost } from '@/lib/api';
+import {
+	CreateTaskSchema,
+	validateData,
+	formatValidationErrors,
+} from '@/lib/validation';
 
-/**
- * Type guard: is the provided body a FormData?
- */
-function isFormData(body: unknown): body is FormData {
-  return typeof FormData !== 'undefined' && body instanceof FormData;
-}
+export default function NewTaskPage() {
+	const router = useRouter();
 
-/**
- * GET-style helper that parses JSON into T.
- * Adds credentials and disables cache by default.
- */
-export async function apiFetch<T>(
-  path: string,
-  init: RequestInit = {}
-): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    cache: 'no-store',
-    ...init,
-  });
+	const [formData, setFormData] = useState({
+		task: '',
+		description: '',
+		priority: 'Medium',
+		status: 'Pending',
+		dueDate: '',
+		labels: '',
+	});
+	const [selectedImages, setSelectedImages] = useState<File[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [errors, setErrors] = useState<Record<string, string>>({});
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text || `Request failed: ${res.status}`);
-  }
-  return (await res.json()) as T;
-}
+	const handleChange = (
+		e: React.ChangeEvent<
+			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+		>
+	) => {
+		const { name, value } = e.target;
+		setFormData((prev) => ({ ...prev, [name]: value }));
+	};
 
-/**
- * Internal helper for write operations. Returns raw Response.
- * - Accepts JSON bodies OR FormData.
- * - Only sets `Content-Type: application/json` when body is NOT FormData
- *   and header isn't already provided.
- */
-async function apiRequest(
-  path: string,
-  init: RequestInit = {}
-): Promise<Response> {
-  const headers: HeadersInit = init.headers ?? {};
-  const body = init.body;
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setErrors({});
+		setLoading(true);
 
-  // If sending JSON and caller didn't set a content-type, set it.
-  if (body != null && !isFormData(body)) {
-    // Normalize to a mutable record
-    const h = headers as Record<string, string>;
-    const hasContentType =
-      Object.keys(h).some((k) => k.toLowerCase() === 'content-type');
-    if (!hasContentType) {
-      h['Content-Type'] = 'application/json';
-    }
-  }
+		try {
+			// Validate with Zod
+			const validation = validateData(CreateTaskSchema, formData);
+			if (!validation.success) {
+				setErrors(formatValidationErrors(validation.errors));
+				toast.error('Please fix the errors below');
+				return;
+			}
 
-  return fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    cache: 'no-store',
-    ...init,
-    headers,
-  });
-}
+			const taskData = validation.data;
 
-/**
- * POST helper. Use with either a JSON string/body or FormData.
- * Example:
- *   await apiPost('/api/easeful', formData);
- *   await apiPost('/api/easeful', JSON.stringify(payload));
- */
-export function apiPost(
-  path: string,
-  body?: BodyInit | null,
-  init?: Omit<RequestInit, 'method' | 'body'>
-): Promise<Response> {
-  return apiRequest(path, { ...(init ?? {}), method: 'POST', body: body ?? undefined });
-}
+			// Build FormData (supports files)
+			const fd = new FormData();
 
-/**
- * PUT helper. Same rules as apiPost.
- */
-export function apiPut(
-  path: string,
-  body?: BodyInit | null,
-  init?: Omit<RequestInit, 'method' | 'body'>
-): Promise<Response> {
-  return apiRequest(path, { ...(init ?? {}), method: 'PUT', body: body ?? undefined });
-}
+			// Append scalar fields
+			if (taskData.task) fd.append('task', taskData.task);
+			if (taskData.description) fd.append('description', taskData.description);
+			if (taskData.priority) fd.append('priority', taskData.priority);
+			if (taskData.status) fd.append('status', taskData.status);
+			if (taskData.dueDate) fd.append('dueDate', taskData.dueDate);
 
-/**
- * DELETE helper. Usually no body, but you can pass one if your API expects it.
- */
-export function apiDelete(
-  path: string,
-  init?: Omit<RequestInit, 'method'>
-): Promise<Response> {
-  return apiRequest(path, { ...(init ?? {}), method: 'DELETE' });
+			// Append labels as array items
+			if (Array.isArray(taskData.labels)) {
+				taskData.labels.forEach((l) => fd.append('labels[]', l));
+			}
+
+			// Append images
+			selectedImages.forEach((file) => fd.append('images', file));
+
+			// POST to Express via helper (credentials included inside helper)
+			type CreateTaskResponse = { success: true; data: Task };
+
+			const json = await apiPost<CreateTaskResponse>('/api/easeful', fd);
+
+			toast.success('Task created successfully!');
+			router.push(`/tasks/${json.data._id}`);
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : 'Failed to create task';
+			setErrors((prev) => ({ ...prev, general: msg }));
+			toast.error(msg);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<RequireAuth>
+			<div className='max-w-2xl mx-auto p-4'>
+				<div className='mb-6'>
+					<Link href='/tasks' className='link link-hover text-sm'>
+						{'\u2190'} Back to tasks
+					</Link>
+					<h1 className='text-2xl font-bold mt-2'>Create New Task</h1>
+				</div>
+
+				<form onSubmit={handleSubmit} className='space-y-6'>
+					<div className='form-control'>
+						<label className='label'>
+							<span className='label-text'>Task Name *</span>
+						</label>
+						<input
+							type='text'
+							name='task'
+							value={formData.task}
+							onChange={handleChange}
+							className={`input input-bordered w-full ${
+								errors.task ? 'input-error' : ''
+							}`}
+							placeholder='Enter task name'
+							maxLength={150}
+						/>
+						{errors.task && (
+							<label className='label'>
+								<span className='label-text-alt text-error'>{errors.task}</span>
+							</label>
+						)}
+					</div>
+
+					<div className='form-control'>
+						<label className='label'>
+							<span className='label-text'>Description *</span>
+						</label>
+						<textarea
+							name='description'
+							value={formData.description}
+							onChange={handleChange}
+							className={`textarea textarea-bordered w-full ${
+								errors.description ? 'textarea-error' : ''
+							}`}
+							placeholder='Describe your task'
+							rows={4}
+						/>
+						{errors.description && (
+							<label className='label'>
+								<span className='label-text-alt text-error'>
+									{errors.description}
+								</span>
+							</label>
+						)}
+					</div>
+
+					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text'>Priority</span>
+							</label>
+							<select
+								name='priority'
+								value={formData.priority}
+								onChange={handleChange}
+								className='select select-bordered w-full'>
+								<option value='Low'>Low</option>
+								<option value='Medium'>Medium</option>
+								<option value='High'>High</option>
+							</select>
+						</div>
+
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text'>Status</span>
+							</label>
+							<select
+								name='status'
+								value={formData.status}
+								onChange={handleChange}
+								className='select select-bordered w-full'>
+								<option value='Pending'>Pending</option>
+								<option value='In Progress'>In Progress</option>
+								<option value='Completed'>Completed</option>
+							</select>
+						</div>
+					</div>
+
+					<div className='form-control'>
+						<label className='label'>
+							<span className='label-text'>Due Date</span>
+						</label>
+						<input
+							type='date'
+							name='dueDate'
+							value={formData.dueDate}
+							onChange={handleChange}
+							className={`input input-bordered w-full ${
+								errors.dueDate ? 'input-error' : ''
+							}`}
+						/>
+						{errors.dueDate && (
+							<label className='label'>
+								<span className='label-text-alt text-error'>
+									{errors.dueDate}
+								</span>
+							</label>
+						)}
+					</div>
+
+					<div className='form-control'>
+						<label className='label'>
+							<span className='label-text'>Labels</span>
+						</label>
+						<input
+							type='text'
+							name='labels'
+							value={formData.labels}
+							onChange={handleChange}
+							className={`input input-bordered w-full ${
+								errors.labels ? 'input-error' : ''
+							}`}
+							placeholder='Enter labels separated by commas'
+						/>
+						{errors.labels ? (
+							<label className='label'>
+								<span className='label-text-alt text-error'>
+									{errors.labels}
+								</span>
+							</label>
+						) : (
+							<label className='label'>
+								<span className='label-text-alt'>
+									Separate multiple labels with commas (max 10 labels, 50 chars
+									each)
+								</span>
+							</label>
+						)}
+					</div>
+
+					<ImageUploadForm
+						selectedFiles={selectedImages}
+						onFilesChange={setSelectedImages}
+					/>
+
+					{errors.general && (
+						<div className='alert alert-error'>
+							<span>{errors.general}</span>
+						</div>
+					)}
+
+					<div className='flex gap-4'>
+						<button
+							type='submit'
+							className='btn btn-primary flex-1'
+							disabled={loading}>
+							{loading ? 'Creating...' : 'Create Task'}
+						</button>
+						<Link href='/tasks' className='btn btn-ghost'>
+							Cancel
+						</Link>
+					</div>
+				</form>
+			</div>
+		</RequireAuth>
+	);
 }
