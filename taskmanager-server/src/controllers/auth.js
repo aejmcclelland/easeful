@@ -53,8 +53,8 @@ exports.login = asyncHandler(async (req, res, next) => {
 exports.logout = asyncHandler(async (req, res, next) => {
 	res.clearCookie('token', {
 		httpOnly: true,
-		sameSite: 'lax',
-		secure: process.env.NODE_ENV === 'production',
+		sameSite: 'none', 
+		secure: true, 
 		path: '/',
 	});
 
@@ -263,18 +263,17 @@ const sendTokenResponse = (user, statusCode, res) => {
 	//Create token
 	const token = user.getSignedJwtToken();
 
+	const days = Number(process.env.JWT_COOKIE_EXPIRE || 30);
 	const options = {
 		httpOnly: true,
-		sameSite: 'lax',
-		secure: process.env.NODE_ENV === 'production',
-		path: '/',
-		// Remove domain restriction to allow cross-origin cookies
-		// domain: undefined,
-		expires: new Date(
-			Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-		),
+		sameSite: 'none', // <— cross-site
+		secure: true, // <— required with SameSite=None (Render/Vercel are HTTPS)
+		path: '/', // <— match on clearCookie
+		// DO NOT set "domain" (let browser infer); setting the wrong domain breaks clearing
+		expires: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
 	};
-	res
+
+	return res
 		.status(statusCode)
 		.cookie('token', token, options)
 		.json({ success: true, token });

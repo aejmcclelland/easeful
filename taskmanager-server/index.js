@@ -42,13 +42,7 @@ const allowedOrigins = [
 
 app.use(
 	cors({
-		origin: function (origin, callback) {
-			if (!origin || allowedOrigins.includes(origin)) {
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
-		},
+		origin: ['https://taskmanager-taskmanager-client.vercel.app'],
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		allowedHeaders: ['Content-Type', 'Authorization'],
 		credentials: true,
@@ -59,16 +53,22 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 	app.use((req, res, next) => {
 		if (req.url.includes('/api/easeful')) {
-			console.log(`>>> ${req.method} ${req.url} - Content-Type: ${req.get('Content-Type')}`);
+			console.log(
+				`>>> ${req.method} ${req.url} - Content-Type: ${req.get(
+					'Content-Type'
+				)}`
+			);
 		}
 		next();
 	});
 }
 
 //Body parser - only parse JSON for application/json requests
-app.use(express.json({ 
-	type: 'application/json'
-}));
+app.use(
+	express.json({
+		type: 'application/json',
+	})
+);
 //Cookie parser
 app.use(cookieParser());
 // Sanatise data
