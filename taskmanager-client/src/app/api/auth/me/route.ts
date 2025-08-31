@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3000';
+const API = process.env.NEXT_PUBLIC_API_BASE! ?? 'http://localhost:3000';
 
 export async function GET(req: Request) {
 	try {
-		const upstream = `${API_BASE}/api/auth/me`;
+		const upstream = `${API}/api/auth/me`;
 
 		// Get the token from the request cookies
 		const token = req.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];

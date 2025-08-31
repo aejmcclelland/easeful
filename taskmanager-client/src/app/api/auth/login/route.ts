@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3000';
+const API = process.env.NEXT_PUBLIC_API_BASE! ?? 'http://localhost:3000';
 
 export async function POST(req: Request) {
 	try {
 		const body = await req.json();
-		const upstream = `${API_BASE}/api/auth/login`;
+		const upstream = `${API}/api/auth/login`;
 
 		const res = await fetch(upstream, {
 			method: 'POST',

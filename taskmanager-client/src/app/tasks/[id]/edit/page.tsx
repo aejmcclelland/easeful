@@ -10,8 +10,11 @@ import RequireAuth from '@/components/RequireAuth';
 import ImageUploadForm from '@/components/ImageUploadForm';
 import type { Task } from '@/lib/types';
 
+const API = process.env.NEXT_PUBLIC_API_BASE!;
+if (!API) throw new Error('NEXT_PUBLIC_API_BASE is not set');
+
 export default function EditTaskPage() {
-	const API = process.env.NEXT_PUBLIC_API_BASE!;
+	// const API = process.env.NEXT_PUBLIC_API_BASE!;  <-- removed this line
 
 	const [formData, setFormData] = useState({
 		task: '',
@@ -36,12 +39,23 @@ export default function EditTaskPage() {
 		const fetchTask = async () => {
 			try {
 				setFetchingTask(true);
-				const res = await fetch(`/api/easeful/${taskId}`, {
+				const res = await fetch(`${API}/api/easeful/${taskId}`, {
 					credentials: 'include',
+					cache: 'no-store',
 				});
 
+				if (res.status === 401) {
+					toast.error('Please log in to edit this task');
+					router.replace('/login');
+					return;
+				}
+				if (res.status === 403) {
+					toast.error('You are not authorized to edit this task');
+					router.replace('/tasks');
+					return;
+				}
 				if (!res.ok) {
-					throw new Error('Failed to fetch task');
+					throw new Error(`Failed to fetch task: ${res.status}`);
 				}
 
 				const data = await res.json();
@@ -79,7 +93,7 @@ export default function EditTaskPage() {
 		try {
 			const encodedPublicId = encodeURIComponent(publicId);
 			const res = await fetch(
-				`/api/easeful/${taskId}/photo/${encodedPublicId}`,
+				`${API}/api/easeful/${taskId}/photo/${encodedPublicId}`,
 				{
 					method: 'DELETE',
 					credentials: 'include',
@@ -130,9 +144,22 @@ export default function EditTaskPage() {
 				credentials: 'include',
 			});
 
+			if (res.status === 401) {
+				toast.error('Please log in to update this task');
+				router.replace('/login');
+				return;
+			}
+			if (res.status === 403) {
+				toast.error('You are not authorized to update this task');
+				return;
+			}
 			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.error || 'Failed to update task');
+				let msg = 'Failed to update task';
+				try {
+					const errorData = await res.json();
+					msg = errorData.error || errorData.message || msg;
+				} catch {}
+				throw new Error(msg);
 			}
 
 			// If there are new images, upload them separately
@@ -150,7 +177,7 @@ export default function EditTaskPage() {
 						imageFormData.append('images', file);
 					});
 
-					const imageRes = await fetch(`${API}/api/easeful${taskId}/photo`, {
+					const imageRes = await fetch(`${API}/api/easeful/${taskId}/photo`, {
 						method: 'PUT',
 						body: imageFormData,
 						credentials: 'include',
@@ -162,12 +189,12 @@ export default function EditTaskPage() {
 					}
 				}
 			}
-
 			// Show success toast
 			toast.success('Task updated successfully!');
 
-			// Redirect back to tasks list
-			router.push('/tasks');
+			// Go to the task detail and refresh UI
+			router.replace(`/tasks/${taskId}`);
+			router.refresh();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Failed to update task';
 			setError(msg);

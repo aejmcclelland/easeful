@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3000';
+const API = process.env.NEXT_PUBLIC_API_BASE! ?? 'http://localhost:3000';
 
 export async function GET(
 	req: Request,
@@ -17,7 +17,7 @@ export async function GET(
 	}
 
 	const { id } = await params;
-	const upstream = `${API_BASE}/api/easeful/${id}`;
+	const upstream = `${API}/api/easeful/${id}`;
 
 	const headers: HeadersInit = {
 		cookie: req.headers.get('cookie') ?? '',
@@ -49,7 +49,7 @@ export async function DELETE(
 	}
 
 	const { id } = await params;
-	const upstream = `${API_BASE}/api/easeful/${id}`;
+	const upstream = `${API}/api/easeful/${id}`;
 
 	const res = await fetch(upstream, {
 		method: 'DELETE',
@@ -87,7 +87,7 @@ export async function PUT(
 
 	const { id } = await params;
 	const body = await req.json();
-	const upstream = `${API_BASE}/api/easeful/${id}`;
+	const upstream = `${API}/api/easeful/${id}`;
 
 	const res = await fetch(upstream, {
 		method: 'PUT',

@@ -20,6 +20,12 @@ type SortOption =
 	| '-priority'
 	| '-status';
 
+const API = process.env.NEXT_PUBLIC_API_BASE;
+if (!API) {
+	// This throws only in the browser; good signal if env var is missing on Vercel
+	throw new Error('NEXT_PUBLIC_API_BASE is not set');
+}
+
 function TasksPageContent() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -35,7 +41,9 @@ function TasksPageContent() {
 			setLoading(true);
 			// Build query string from URL parameters
 			const queryString = searchParams.toString();
-			const url = queryString ? `/api/easeful?${queryString}` : '/api/easeful';
+			const url = queryString
+				? `${API}/api/easeful?${queryString}`
+				: `${API}/api/easeful`;
 
 			const res = await fetch(url, {
 				cache: 'no-store',
@@ -43,16 +51,21 @@ function TasksPageContent() {
 			});
 
 			if (!res.ok) {
-				throw new Error(`Failed to fetch tasks: ${res.status}`);
+				// Try to surface server error message
+				let msg = `Failed to fetch tasks: ${res.status}`;
+				try {
+					const err = await res.json();
+					if (err?.error || err?.message) msg = err.error || err.message;
+				} catch {
+					/* ignore */
+				}
+				throw new Error(msg);
 			}
 
 			const json: TasksResponse = await res.json();
-			const tasksData = json.data ?? [];
-			setTasks(tasksData);
+			setTasks(json.data ?? []);
 			setPagination(json.pagination);
 			setTotal(json.total || 0);
-			
-			// Note: Labels will be updated by the updateLabelsFromTasks useEffect
 		} catch (error) {
 			console.error('Error fetching tasks:', error);
 			toast.error('Failed to load tasks');
@@ -60,7 +73,6 @@ function TasksPageContent() {
 			setLoading(false);
 		}
 	}, [searchParams]);
-
 
 	// URL parameter helpers
 	const updateURL = useCallback(
@@ -93,34 +105,40 @@ function TasksPageContent() {
 		[searchParams, router]
 	);
 
-	const API = process.env.NEXT_PUBLIC_API_BASE!;
-
 	// Get current filter values from URL
 	const getFilterValue = (key: string): string => searchParams.get(key) || '';
-	const getFilterArray = useCallback((key: string): string[] => {
-		const value = searchParams.get(key);
-		return value ? value.split(',').map((v) => v.trim()) : [];
-	}, [searchParams]);
+	const getFilterArray = useCallback(
+		(key: string): string[] => {
+			const value = searchParams.get(key);
+			return value ? value.split(',').map((v) => v.trim()) : [];
+		},
+		[searchParams]
+	);
 
 	// Helper function to update available labels from current tasks
-	const updateLabelsFromTasks = useCallback((tasks: Task[]) => {
-		const labels = new Set<string>();
-		tasks.forEach((task) => {
-			task.labels?.forEach((label) => labels.add(label));
-		});
-		const labelsArray = Array.from(labels).sort();
-		setUserLabels(labelsArray);
+	const updateLabelsFromTasks = useCallback(
+		(tasks: Task[]) => {
+			const labels = new Set<string>();
+			tasks.forEach((task) => {
+				task.labels?.forEach((label) => labels.add(label));
+			});
+			const labelsArray = Array.from(labels).sort();
+			setUserLabels(labelsArray);
 
-		// Check if any active label filters are no longer valid
-		const activeLabels = getFilterArray('labels');
-		const invalidLabels = activeLabels.filter(label => !labels.has(label));
-		
-		if (invalidLabels.length > 0) {
-			// Remove invalid labels from active filters
-			const validActiveLabels = activeLabels.filter(label => labels.has(label));
-			updateURL({ labels: validActiveLabels });
-		}
-	}, [getFilterArray, updateURL]);
+			// Check if any active label filters are no longer valid
+			const activeLabels = getFilterArray('labels');
+			const invalidLabels = activeLabels.filter((label) => !labels.has(label));
+
+			if (invalidLabels.length > 0) {
+				// Remove invalid labels from active filters
+				const validActiveLabels = activeLabels.filter((label) =>
+					labels.has(label)
+				);
+				updateURL({ labels: validActiveLabels });
+			}
+		},
+		[getFilterArray, updateURL]
+	);
 
 	// Filter handlers
 	const handleSortChange = (sort: SortOption) => {
@@ -177,8 +195,14 @@ function TasksPageContent() {
 			});
 
 			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.error || 'Failed to delete task');
+				let msg = 'Failed to delete task';
+				try {
+					const err = await res.json();
+					msg = err.error || err.message || msg;
+				} catch {
+					/* ignore */
+				}
+				throw new Error(msg);
 			}
 
 			// Remove task from local state and update labels
@@ -310,14 +334,15 @@ function TasksPageContent() {
 export default function TasksPage() {
 	return (
 		<RequireAuth>
-			<Suspense fallback={
-				<div className='max-w-3xl mx-auto p-4'>
-					<div className='flex justify-center items-center py-12'>
-						<div className='loading loading-spinner loading-lg'></div>
-						<span className='ml-3 text-lg'>Loading tasks...</span>
+			<Suspense
+				fallback={
+					<div className='max-w-3xl mx-auto p-4'>
+						<div className='flex justify-center items-center py-12'>
+							<div className='loading loading-spinner loading-lg'></div>
+							<span className='ml-3 text-lg'>Loading tasks...</span>
+						</div>
 					</div>
-				</div>
-			}>
+				}>
 				<TasksPageContent />
 			</Suspense>
 		</RequireAuth>

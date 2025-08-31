@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3000';
+const API = process.env.NEXT_PUBLIC_API_BASE! ?? 'http://localhost:3000';
 
 export async function GET(req: Request) {
 	try {
-		const upstream = `${API_BASE}/api/auth/logout`;
+		const upstream = `${API}/api/auth/logout`;
 
 		const res = await fetch(upstream, {
 			method: 'GET',

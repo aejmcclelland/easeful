@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 
+const API = process.env.NEXT_PUBLIC_API_BASE!;
+
 export default function LoginPage() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -18,16 +20,16 @@ export default function LoginPage() {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
-				const res = await fetch('/api/auth/me', {
+				const res = await fetch(`${API}/api/auth/me`, {
 					credentials: 'include',
 				});
 				
 				if (res.ok) {
 					// User is already authenticated, redirect to tasks
-					router.push('/tasks');
+					router.replace('/tasks');
 					return;
 				}
-			} catch (err) {
+			} catch {
 				// User not authenticated, continue with login form
 			} finally {
 				setCheckingAuth(false);
@@ -43,11 +45,11 @@ export default function LoginPage() {
 		setLoading(true);
 
 		try {
-			const res = await fetch(`/api/auth/login`, {
+			const res = await fetch(`${API}/api/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password }),
-				credentials: 'include', // ⬅️ important so cookie is saved
+				credentials: 'include', 
 			});
 
 			if (!res.ok) {
@@ -56,9 +58,8 @@ export default function LoginPage() {
 			}
 
 			// success → go to tasks & refresh so Navbar updates
-			router.push('/tasks');
-			// Force a hard refresh to ensure cookies are properly set
-			window.location.reload();
+			router.replace('/tasks');
+			router.refresh();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Login failed';
 			setError(msg);
