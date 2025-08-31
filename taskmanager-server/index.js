@@ -19,8 +19,19 @@ const connectDB = require('./src/config/db');
 connectDB();
 
 const app = express();
-const u = new URL(process.env.MONGO_URI);
-console.log('Mongo user from URI:', u.username);
+
+app.set('trust proxy', 1);
+
+try {
+	if (process.env.MONGO_URI) {
+		const u = new URL(process.env.MONGO_URI);
+		console.log('Mongo user from URI:', u.username);
+	} else {
+		console.warn('MONGO_URI not set');
+	}
+} catch (e) {
+	console.warn('Unable to parse MONGO_URI:', e.message);
+}
 //use CORS middleware
 // Allow requests from localhost:3001 (your React app's development server)
 const allowedOrigins = [
@@ -47,7 +58,7 @@ app.use(
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
 	app.use((req, res, next) => {
-		if (req.url.includes('/api/taskman')) {
+		if (req.url.includes('/api/easeful')) {
 			console.log(`>>> ${req.method} ${req.url} - Content-Type: ${req.get('Content-Type')}`);
 		}
 		next();
@@ -76,12 +87,7 @@ const limiter = rateLimit({
 app.use(limiter);
 //Prevent http param pollution
 app.use(hpp());
-// Commented out express-fileupload as we're using multer for file uploads
-// app.use(
-// 	fileupload({
-// 		limits: { fileSize: parseInt(process.env.FILE_UPLOAD_LIMIT) },
-// 	})
-// );
+
 //Route files
 const tasks = require('./src/routes/tasks');
 const auth = require('./src/routes/auth');
@@ -90,7 +96,7 @@ const users = require('./src/routes/users');
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api/taskman', tasks);
+app.use('/api/easeful', tasks);
 app.use('/api/auth', auth); //mount routers
 app.use('/api/users', users); //mount routers
 
