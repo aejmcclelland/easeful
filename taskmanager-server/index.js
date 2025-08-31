@@ -38,6 +38,7 @@ const allowedOrigins = [
 	'http://localhost:3000', // Next.js dev server
 	'http://localhost:3001', // React dev server (if used)
 	'https://taskmanager-taskmanager-client.vercel.app',
+	/\.vercel\.app$/,
 ];
 
 app.use(
