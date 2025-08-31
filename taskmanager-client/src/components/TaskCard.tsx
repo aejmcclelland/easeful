@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Task } from '@/lib/types';
 import ImageModal from './ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
@@ -103,10 +104,13 @@ export default function TaskCard({
 									className='relative image-thumbnail cursor-pointer hover:opacity-80 transition-opacity'
 									onClick={(e) => handleImageClick(e, index)}
 								>
-									<img
+									<Image
 										src={image.url.replace('/upload/', '/upload/w_60,h_45,c_fill,q_auto,f_auto/')}
 										alt={`Task image ${index + 1}`}
+										width={60}
+										height={44}
 										className='w-15 h-11 object-cover rounded border'
+										unoptimized
 									/>
 								</div>
 							))}

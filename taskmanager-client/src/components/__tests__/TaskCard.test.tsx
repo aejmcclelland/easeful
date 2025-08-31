@@ -64,10 +64,12 @@ describe('TaskCard', () => {
   })
 
   test('handles task click navigation', () => {
-    const mockPush = jest.fn()
     // Mock window.location.href
-    delete (window as any).location
-    window.location = { href: '' } as any
+    const mockLocation = { href: '' }
+    Object.defineProperty(window, 'location', {
+      value: mockLocation,
+      writable: true
+    })
     
     render(<TaskCard task={mockTask} />)
     

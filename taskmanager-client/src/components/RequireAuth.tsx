@@ -22,7 +22,7 @@ export default function RequireAuth({ children, fallbackPath = '/login' }: Requi
 					return;
 				}
 				setIsAuthenticated(true);
-			} catch (error) {
+			} catch {
 				router.push(fallbackPath);
 			}
 		};

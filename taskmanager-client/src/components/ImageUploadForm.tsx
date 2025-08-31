@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImage, faTimes, faUpload } from '@fortawesome/free-solid-svg-icons';
 import ImageModal from './ImageModal';
@@ -104,11 +105,14 @@ export default function ImageUploadForm({
 					<div className='grid grid-cols-3 gap-2'>
 						{existingImages.map((image, index) => (
 							<div key={image.public_id} className='relative group'>
-								<img
+								<Image
 									src={image.url.replace('/upload/', '/upload/w_120,h_90,c_fill,q_auto,f_auto/')}
 									alt='Task image'
+									width={120}
+									height={80}
 									className='w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity'
 									onClick={() => handleImageClick(index)}
+									unoptimized
 								/>
 								{onDeleteExisting && (
 									<button

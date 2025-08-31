@@ -153,10 +153,13 @@ export default function ImageModal({
 								className={`w-16 h-12 rounded border-2 overflow-hidden ${
 									index === currentIndex ? 'border-primary' : 'border-white border-opacity-50'
 								}`}>
-								<img
+								<Image
 									src={image.url.replace('/upload/', '/upload/w_60,h_45,c_fill,q_auto,f_auto/')}
 									alt={`Thumbnail ${index + 1}`}
+									width={60}
+									height={45}
 									className='w-full h-full object-cover'
+									unoptimized
 								/>
 							</button>
 						))}
