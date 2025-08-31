@@ -18,7 +18,6 @@ export default function TaskDetailPage({
 	const [deleting, setDeleting] = useState(false);
 	const router = useRouter();
 
-
 	useEffect(() => {
 		const fetchTask = async () => {
 			try {
@@ -60,6 +59,8 @@ export default function TaskDetailPage({
 		fetchTask();
 	}, [params, router]);
 
+	const API = process.env.NEXT_PUBLIC_API_BASE!;
+
 	const handleDeleteTask = async () => {
 		if (!task) return;
 
@@ -73,7 +74,7 @@ export default function TaskDetailPage({
 		try {
 			setDeleting(true);
 
-			const res = await fetch(`/api/easeful/${task._id}`, {
+			const res = await fetch(`${API}/api/easeful${task._id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -125,24 +126,24 @@ export default function TaskDetailPage({
 	return (
 		<RequireAuth>
 			<div className='max-w-4xl mx-auto p-6 space-y-6'>
-			<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full'>
-				<i className='fas fa-arrow-left mr-2'></i>
-				Back to tasks
-			</Link>
+				<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full'>
+					<i className='fas fa-arrow-left mr-2'></i>
+					Back to tasks
+				</Link>
 
-			<TaskCard
-				task={task}
-				onDelete={handleDeleteTask}
-				showDeleteButton={true}
-			/>
+				<TaskCard
+					task={task}
+					onDelete={handleDeleteTask}
+					showDeleteButton={true}
+				/>
 
-			{deleting && (
-				<div className='flex justify-center items-center py-4'>
-					<div className='loading loading-spinner loading-md'></div>
-					<span className='ml-3'>Deleting task...</span>
-				</div>
-			)}
-		</div>
+				{deleting && (
+					<div className='flex justify-center items-center py-4'>
+						<div className='loading loading-spinner loading-md'></div>
+						<span className='ml-3'>Deleting task...</span>
+					</div>
+				)}
+			</div>
 		</RequireAuth>
 	);
 }

@@ -93,6 +93,8 @@ function TasksPageContent() {
 		[searchParams, router]
 	);
 
+	const API = process.env.NEXT_PUBLIC_API_BASE!;
+
 	// Get current filter values from URL
 	const getFilterValue = (key: string): string => searchParams.get(key) || '';
 	const getFilterArray = useCallback((key: string): string[] => {
@@ -169,7 +171,7 @@ function TasksPageContent() {
 		if (!confirmed) return;
 
 		try {
-			const res = await fetch(`/api/easeful/${taskId}`, {
+			const res = await fetch(`${API}/api/easeful/${taskId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});

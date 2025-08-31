@@ -11,6 +11,8 @@ import ImageUploadForm from '@/components/ImageUploadForm';
 import { CreateTaskSchema, validateData, formatValidationErrors } from '@/lib/validation';
 
 export default function NewTaskPage() {
+	const API = process.env.NEXT_PUBLIC_API_BASE!;
+
 	const [formData, setFormData] = useState({
 		task: '',
 		description: '',
@@ -64,7 +66,7 @@ export default function NewTaskPage() {
 				formDataToSend.append('images', file);
 			});
 
-			const res = await fetch('/api/easeful', {
+			const res = await fetch(`${API}/api/easeful`, {
 				method: 'POST',
 				body: formDataToSend,
 				credentials: 'include',
