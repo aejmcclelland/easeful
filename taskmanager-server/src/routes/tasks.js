@@ -35,7 +35,10 @@ router.delete('/reset', resetAllTasks);
 router.route('/:id/photo').put(upload.array('images', 6), taskPhotoUpload);
 router.route('/:id/photo/:public_id').delete(deleteTaskImage);
 
-router.route('/').get(userScope, taskQueryValidation, advancedResults(Tasks), getTasks).post(upload.array('images', 5), taskValidation, createTask); // Allow up to 5 images, optional
+router.route('/').get(userScope, taskQueryValidation, advancedResults(Tasks), getTasks).post((req, res, next) => {
+	console.log('POST /api/taskman route hit!');
+	next();
+}, upload.array('images', 5), createTask); // Allow up to 5 images, optional
 
 router.route('/:id').get(getTask).put(taskValidation, updateTask).delete(deleteTask);
 

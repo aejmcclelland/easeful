@@ -139,7 +139,6 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
 		return res.status(200).json({ success: true, data: 'Email sent' });
 	} catch (err) {
-		console.log(err);
 		user.resetPasswordToken = undefined;
 		user.resetPasswordExpire = undefined;
 
@@ -186,10 +185,6 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 //@route    PUT /api/auth/updateavatar
 //@access   Private
 exports.updateAvatar = asyncHandler(async (req, res, next) => {
-	console.log('updateAvatar called');
-	console.log('req.files:', req.files);
-	console.log('req.body:', req.body);
-
 	const user = await User.findById(req.user.id);
 
 	if (!user) {
@@ -223,7 +218,7 @@ exports.updateAvatar = asyncHandler(async (req, res, next) => {
 		try {
 			await cloudinary.uploader.destroy(user.avatar.public_id);
 		} catch (error) {
-			console.log('Error deleting old avatar:', error);
+			// Silently continue if old avatar deletion fails
 		}
 	}
 

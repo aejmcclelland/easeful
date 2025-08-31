@@ -48,7 +48,14 @@ export default function NewTaskPage() {
 			// Add task data
 			Object.entries(taskData).forEach(([key, value]) => {
 				if (value !== undefined && value !== '') {
-					formDataToSend.append(key, value.toString());
+					if (key === 'labels' && Array.isArray(value)) {
+						// Send labels as separate form fields
+						value.forEach(label => {
+							formDataToSend.append('labels[]', label);
+						});
+					} else {
+						formDataToSend.append(key, value.toString());
+					}
 				}
 			});
 

@@ -8,7 +8,6 @@ const connectDB = async () => {
 			useUnifiedTopology: true,
 		});
 		console.log(`MongoDB Connected: ${conn.connection.host}`.magenta.inverse);
-		console.log(mongoose.connection.readyState);
 	} catch (error) {
 		console.error(error);
 		process.exit(1); // Exit the process if unable to connect to the database

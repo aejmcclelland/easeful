@@ -43,18 +43,21 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 //@route    POST /api/taskman
 //@access   Private
 exports.createTask = asyncHandler(async (req, res, next) => {
+	
 	try {
 		//Add user to req.body
 		req.body.user = req.user.id;
 
-		const images = []; //store upload image URLs and filenames
-
-		// Images have already been uploaded and processed by multer and multer-storage-cloudinary
+		// Process uploaded images from Cloudinary
+		const images = [];
 		if (req.files && req.files.length > 0) {
 			for (const file of req.files) {
 				images.push({
-					url: file.secure_url,
-					filename: file.originalname,
+					public_id: file.filename, // Cloudinary returns filename as the public_id
+					url: file.path, // Cloudinary returns path as the secure URL
+					width: file.width || undefined,
+					height: file.height || undefined,
+					bytes: file.size || undefined
 				});
 			}
 		}
@@ -175,9 +178,10 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 	}
 
 	const { public_id } = req.params;
+	const decodedPublicId = decodeURIComponent(public_id);
 
 	// Find the image in the task
-	const imageIndex = task.images.findIndex(img => img.public_id === public_id);
+	const imageIndex = task.images.findIndex(img => img.public_id === decodedPublicId);
 	
 	if (imageIndex === -1) {
 		return next(new ErrorResponse('Image not found', 404));
@@ -186,7 +190,7 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 	try {
 		// Delete from Cloudinary
 		const cloudinary = require('cloudinary').v2;
-		await cloudinary.uploader.destroy(public_id);
+		await cloudinary.uploader.destroy(decodedPublicId);
 
 		// Remove from task
 		task.images.splice(imageIndex, 1);

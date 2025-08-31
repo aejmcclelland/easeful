@@ -46,6 +46,12 @@ app.use(
 //Development logging middleware
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
+	app.use((req, res, next) => {
+		if (req.url.includes('/api/taskman')) {
+			console.log(`>>> ${req.method} ${req.url} - Content-Type: ${req.get('Content-Type')}`);
+		}
+		next();
+	});
 }
 
 //Body parser - only parse JSON for application/json requests

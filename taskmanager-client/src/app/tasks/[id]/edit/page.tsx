@@ -73,7 +73,8 @@ export default function EditTaskPage() {
 
 	const handleDeleteImage = async (publicId: string) => {
 		try {
-			const res = await fetch(`/api/taskman/${taskId}/photo/${publicId}`, {
+			const encodedPublicId = encodeURIComponent(publicId);
+			const res = await fetch(`/api/taskman/${taskId}/photo/${encodedPublicId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -131,7 +132,7 @@ export default function EditTaskPage() {
 				const validFiles = selectedImages.filter(file => file && file instanceof File && file.size > 0);
 				
 				if (validFiles.length === 0) {
-					console.warn('No valid files to upload');
+					// No valid files to upload, skip
 				} else {
 					const imageFormData = new FormData();
 					validFiles.forEach((file) => {

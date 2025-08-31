@@ -58,12 +58,26 @@ const taskValidation = [
 	
 	body('labels')
 		.optional()
-		.isArray({ max: 10 })
-		.withMessage('Labels must be an array with maximum 10 items')
-		.custom((labels) => {
-			if (!Array.isArray(labels)) return true;
+		.custom((value) => {
+			// Handle both array and string formats
+			if (value === undefined || value === null || value === '') return true;
 			
-			for (const label of labels) {
+			let labelsArray;
+			if (Array.isArray(value)) {
+				labelsArray = value;
+			} else if (typeof value === 'string') {
+				// Handle comma-separated string
+				labelsArray = value.split(',').map(label => label.trim()).filter(label => label.length > 0);
+			} else {
+				throw new Error('Labels must be an array or comma-separated string');
+			}
+			
+			if (labelsArray.length > 10) {
+				throw new Error('Labels must be an array with maximum 10 items');
+			}
+			
+			// Validate each label
+			for (const label of labelsArray) {
 				if (typeof label !== 'string') {
 					throw new Error('Each label must be a string');
 				}
@@ -77,11 +91,22 @@ const taskValidation = [
 					throw new Error('Labels can only contain letters, numbers, spaces, hyphens, and underscores');
 				}
 			}
+			
 			return true;
 		})
-		.customSanitizer((labels) => {
-			if (!Array.isArray(labels)) return labels;
-			return labels.map(label => label.trim()).filter(label => label.length > 0);
+		.customSanitizer((value) => {
+			if (value === undefined || value === null || value === '') return [];
+			
+			let labelsArray;
+			if (Array.isArray(value)) {
+				labelsArray = value;
+			} else if (typeof value === 'string') {
+				labelsArray = value.split(',').map(label => label.trim()).filter(label => label.length > 0);
+			} else {
+				return [];
+			}
+			
+			return labelsArray.map(label => label.trim()).filter(label => label.length > 0);
 		}),
 	
 	// Reject any unexpected fields for security
