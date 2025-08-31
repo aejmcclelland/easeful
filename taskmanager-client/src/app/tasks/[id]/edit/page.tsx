@@ -2,20 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+
 import RequireAuth from '@/components/RequireAuth';
 import ImageUploadForm from '@/components/ImageUploadForm';
 import type { Task } from '@/lib/types';
-
-const API = process.env.NEXT_PUBLIC_API_BASE!;
-if (!API) throw new Error('NEXT_PUBLIC_API_BASE is not set');
+import {
+	HttpError,
+	apiGet,
+	apiPutJson,
+	apiPutForm,
+	apiDelete,
+} from '@/lib/api';
 
 export default function EditTaskPage() {
-	// const API = process.env.NEXT_PUBLIC_API_BASE!;  <-- removed this line
-
 	const [formData, setFormData] = useState({
 		task: '',
 		description: '',
@@ -31,51 +34,47 @@ export default function EditTaskPage() {
 	const [loading, setLoading] = useState(false);
 	const [fetchingTask, setFetchingTask] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+
 	const router = useRouter();
 	const params = useParams();
 	const taskId = params.id as string;
 
+	// Load task
 	useEffect(() => {
 		const fetchTask = async () => {
 			try {
 				setFetchingTask(true);
-				const res = await fetch(`${API}/api/easeful/${taskId}`, {
-					credentials: 'include',
-					cache: 'no-store',
-				});
 
-				if (res.status === 401) {
-					toast.error('Please log in to edit this task');
-					router.replace('/login');
-					return;
-				}
-				if (res.status === 403) {
-					toast.error('You are not authorized to edit this task');
-					router.replace('/tasks');
-					return;
-				}
-				if (!res.ok) {
-					throw new Error(`Failed to fetch task: ${res.status}`);
-				}
+				const json = await apiGet<{ data: Task } | Task>(
+					`/api/easeful/${taskId}`
+				);
+				const task: Task = (json as { data?: Task }).data ?? (json as Task);
 
-				const data = await res.json();
-				const task: Task = data.data;
-
-				// Convert task data to form format
 				setFormData({
-					task: task.task || '',
-					description: task.description || '',
-					priority: task.priority || 'Medium',
-					status: task.status || 'Pending',
+					task: task.task ?? '',
+					description: task.description ?? '',
+					priority: task.priority ?? 'Medium',
+					status: task.status ?? 'Pending',
 					dueDate: task.dueDate
 						? new Date(task.dueDate).toISOString().split('T')[0]
 						: '',
 					labels: task.labels ? task.labels.join(', ') : '',
 				});
 
-				// Set existing images
-				setExistingImages(task.images || []);
+				setExistingImages(task.images ?? []);
 			} catch (err) {
+				if (err instanceof HttpError) {
+					if (err.status === 401) {
+						toast.error('Please log in to edit this task');
+						router.replace('/login');
+						return;
+					}
+					if (err.status === 403) {
+						toast.error('You are not authorized to edit this task');
+						router.replace('/tasks');
+						return;
+					}
+				}
 				const msg = err instanceof Error ? err.message : 'Failed to fetch task';
 				setError(msg);
 				toast.error(msg);
@@ -84,28 +83,15 @@ export default function EditTaskPage() {
 			}
 		};
 
-		if (taskId) {
-			fetchTask();
-		}
-	}, [taskId]);
+		if (taskId) void fetchTask();
+	}, [taskId, router]);
 
+	// Delete a single existing image
 	const handleDeleteImage = async (publicId: string) => {
 		try {
-			const encodedPublicId = encodeURIComponent(publicId);
-			const res = await fetch(
-				`${API}/api/easeful/${taskId}/photo/${encodedPublicId}`,
-				{
-					method: 'DELETE',
-					credentials: 'include',
-				}
-			);
+			const encoded = encodeURIComponent(publicId);
+			await apiDelete(`/api/easeful/${taskId}/photo/${encoded}`);
 
-			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.error || 'Failed to delete image');
-			}
-
-			// Remove from local state
 			setExistingImages((prev) =>
 				prev.filter((img) => img.public_id !== publicId)
 			);
@@ -116,86 +102,60 @@ export default function EditTaskPage() {
 		}
 	};
 
+	// Submit updates
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null);
 		setLoading(true);
 
 		try {
-			// Convert labels string to array
+			// Convert labels string → array
 			const labelsArray = formData.labels
 				.split(',')
-				.map((label) => label.trim())
-				.filter((label) => label.length > 0);
+				.map((l) => l.trim())
+				.filter(Boolean);
 
 			const taskData = {
 				...formData,
 				labels: labelsArray,
+				// don't send empty string as date
 				dueDate: formData.dueDate || undefined,
 			};
 
-			// First, update the task data with JSON
-			const res = await fetch(`${API}/api/easeful/${taskId}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(taskData),
-				credentials: 'include',
-			});
+			// 1) Update JSON fields
+			await apiPutJson<typeof taskData, { data: Task }>(
+				`/api/easeful/${taskId}`,
+				taskData
+			);
 
-			if (res.status === 401) {
-				toast.error('Please log in to update this task');
-				router.replace('/login');
-				return;
-			}
-			if (res.status === 403) {
-				toast.error('You are not authorized to update this task');
-				return;
-			}
-			if (!res.ok) {
-				let msg = 'Failed to update task';
-				try {
-					const errorData = await res.json();
-					msg = errorData.error || errorData.message || msg;
-				} catch {}
-				throw new Error(msg);
-			}
-
-			// If there are new images, upload them separately
+			// 2) Upload new images (if any)
 			if (selectedImages.length > 0) {
-				// Validate files before upload
 				const validFiles = selectedImages.filter(
-					(file) => file && file instanceof File && file.size > 0
+					(f) => f && f instanceof File && f.size > 0
 				);
-
-				if (validFiles.length === 0) {
-					// No valid files to upload, skip
-				} else {
-					const imageFormData = new FormData();
-					validFiles.forEach((file) => {
-						imageFormData.append('images', file);
-					});
-
-					const imageRes = await fetch(`${API}/api/easeful/${taskId}/photo`, {
-						method: 'PUT',
-						body: imageFormData,
-						credentials: 'include',
-					});
-
-					if (!imageRes.ok) {
-						const errorData = await imageRes.json();
-						throw new Error(errorData.error || 'Failed to upload images');
-					}
+				if (validFiles.length > 0) {
+					const fd = new FormData();
+					validFiles.forEach((file) => fd.append('images', file));
+					// NOTE the slash before ${taskId}
+					await apiPutForm<{ data: Task }>(`/api/easeful/${taskId}/photo`, fd);
 				}
 			}
-			// Show success toast
-			toast.success('Task updated successfully!');
 
-			// Go to the task detail and refresh UI
+			toast.success('Task updated successfully!');
 			router.replace(`/tasks/${taskId}`);
 			router.refresh();
 		} catch (err) {
+			if (err instanceof HttpError) {
+				if (err.status === 401) {
+					toast.error('Please log in to update this task');
+					router.replace('/login');
+					return;
+				}
+				if (err.status === 403) {
+					toast.error('You are not authorized to update this task');
+					return;
+				}
+			}
 			const msg = err instanceof Error ? err.message : 'Failed to update task';
 			setError(msg);
 			toast.error(msg);
@@ -217,7 +177,7 @@ export default function EditTaskPage() {
 		return (
 			<div className='max-w-2xl mx-auto p-4'>
 				<div className='flex justify-center items-center py-12'>
-					<div className='loading loading-spinner loading-lg'></div>
+					<div className='loading loading-spinner loading-lg' />
 					<span className='ml-3 text-lg'>Loading task...</span>
 				</div>
 			</div>
@@ -230,7 +190,7 @@ export default function EditTaskPage() {
 				<div className='alert alert-error'>
 					<FontAwesomeIcon
 						icon={faExclamationTriangle}
-						style={{ width: '18px', height: '18px' }}
+						style={{ width: 18, height: 18 }}
 					/>
 					<span>{error}</span>
 				</div>
@@ -359,7 +319,7 @@ export default function EditTaskPage() {
 						<div className='alert alert-error'>
 							<FontAwesomeIcon
 								icon={faExclamationTriangle}
-								style={{ width: '18px', height: '18px' }}
+								style={{ width: 18, height: 18 }}
 							/>
 							<span>{error}</span>
 						</div>

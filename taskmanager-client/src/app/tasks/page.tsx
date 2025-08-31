@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
+
 import TaskCard from '@/components/TaskCard';
 import SearchBar from '@/components/SearchBar';
 import LabelFilter from '@/components/LabelFilter';
@@ -11,340 +12,254 @@ import TaskFilters from '@/components/TaskFilters';
 import EmptyState from '@/components/EmptyState';
 import Pagination from '@/components/Pagination';
 import RequireAuth from '@/components/RequireAuth';
+
 import type { Task, TasksResponse, PaginationInfo } from '@/lib/types';
+import { apiFetch, apiDelete } from '@/lib/api';
 
-type SortOption =
-	| '-createdAt'
-	| 'createdAt'
-	| 'dueDate'
-	| '-priority'
-	| '-status';
-
-const API = process.env.NEXT_PUBLIC_API_BASE;
-if (!API) {
-	// This throws only in the browser; good signal if env var is missing on Vercel
-	throw new Error('NEXT_PUBLIC_API_BASE is not set');
-}
+type SortOption = '-createdAt' | 'createdAt' | 'dueDate' | '-priority' | '-status';
 
 function TasksPageContent() {
-	const [tasks, setTasks] = useState<Task[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-	const [total, setTotal] = useState(0);
-	const [userLabels, setUserLabels] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [total, setTotal] = useState(0);
+  const [userLabels, setUserLabels] = useState<string[]>([]);
 
-	const router = useRouter();
-	const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-	const fetchTasks = useCallback(async () => {
-		try {
-			setLoading(true);
-			// Build query string from URL parameters
-			const queryString = searchParams.toString();
-			const url = queryString
-				? `${API}/api/easeful?${queryString}`
-				: `${API}/api/easeful`;
+  const fetchTasks = useCallback(async () => {
+    try {
+      setLoading(true);
 
-			const res = await fetch(url, {
-				cache: 'no-store',
-				credentials: 'include',
-			});
+      // Build query string from URL parameters
+      const queryString = searchParams.toString();
+      const path = queryString ? `/api/easeful?${queryString}` : `/api/easeful`;
 
-			if (!res.ok) {
-				// Try to surface server error message
-				let msg = `Failed to fetch tasks: ${res.status}`;
-				try {
-					const err = await res.json();
-					if (err?.error || err?.message) msg = err.error || err.message;
-				} catch {
-					/* ignore */
-				}
-				throw new Error(msg);
-			}
+      const json = await apiFetch<TasksResponse>(path, { cache: 'no-store' });
 
-			const json: TasksResponse = await res.json();
-			setTasks(json.data ?? []);
-			setPagination(json.pagination);
-			setTotal(json.total || 0);
-		} catch (error) {
-			console.error('Error fetching tasks:', error);
-			toast.error('Failed to load tasks');
-		} finally {
-			setLoading(false);
-		}
-	}, [searchParams]);
+      setTasks(json.data ?? []);
+      setPagination(json.pagination ?? null);
+      setTotal(json.total ?? 0);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast.error('Failed to load tasks');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams]);
 
-	// URL parameter helpers
-	const updateURL = useCallback(
-		(updates: Record<string, string | string[] | null>) => {
-			const params = new URLSearchParams(searchParams.toString());
+  // URL parameter helpers
+  const updateURL = useCallback(
+    (updates: Record<string, string | string[] | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-			Object.entries(updates).forEach(([key, value]) => {
-				if (
-					value === null ||
-					value === '' ||
-					(Array.isArray(value) && value.length === 0)
-				) {
-					params.delete(key);
-				} else if (Array.isArray(value)) {
-					params.set(key, value.join(','));
-				} else {
-					params.set(key, value);
-				}
-			});
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+          params.delete(key);
+        } else if (Array.isArray(value)) {
+          params.set(key, value.join(','));
+        } else {
+          params.set(key, value);
+        }
+      });
 
-			// Reset to page 1 when filters change
-			if (
-				Object.keys(updates).some((key) => key !== 'page' && key !== 'limit')
-			) {
-				params.set('page', '1');
-			}
+      // Reset to page 1 when filters change
+      if (Object.keys(updates).some((key) => key !== 'page' && key !== 'limit')) {
+        params.set('page', '1');
+      }
 
-			router.push(`/tasks?${params.toString()}`);
-		},
-		[searchParams, router]
-	);
+      router.push(`/tasks?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
-	// Get current filter values from URL
-	const getFilterValue = (key: string): string => searchParams.get(key) || '';
-	const getFilterArray = useCallback(
-		(key: string): string[] => {
-			const value = searchParams.get(key);
-			return value ? value.split(',').map((v) => v.trim()) : [];
-		},
-		[searchParams]
-	);
+  // Get current filter values from URL
+  const getFilterValue = (key: string): string => searchParams.get(key) || '';
+  const getFilterArray = useCallback(
+    (key: string): string[] => {
+      const value = searchParams.get(key);
+      return value ? value.split(',').map((v) => v.trim()) : [];
+    },
+    [searchParams]
+  );
 
-	// Helper function to update available labels from current tasks
-	const updateLabelsFromTasks = useCallback(
-		(tasks: Task[]) => {
-			const labels = new Set<string>();
-			tasks.forEach((task) => {
-				task.labels?.forEach((label) => labels.add(label));
-			});
-			const labelsArray = Array.from(labels).sort();
-			setUserLabels(labelsArray);
+  // Helper function to update available labels from current tasks
+  const updateLabelsFromTasks = useCallback(
+    (ts: Task[]) => {
+      const labels = new Set<string>();
+      ts.forEach((task) => task.labels?.forEach((label) => labels.add(label)));
+      const labelsArray = Array.from(labels).sort();
+      setUserLabels(labelsArray);
 
-			// Check if any active label filters are no longer valid
-			const activeLabels = getFilterArray('labels');
-			const invalidLabels = activeLabels.filter((label) => !labels.has(label));
+      // Check if any active label filters are no longer valid
+      const activeLabels = getFilterArray('labels');
+      const invalidLabels = activeLabels.filter((label) => !labels.has(label));
 
-			if (invalidLabels.length > 0) {
-				// Remove invalid labels from active filters
-				const validActiveLabels = activeLabels.filter((label) =>
-					labels.has(label)
-				);
-				updateURL({ labels: validActiveLabels });
-			}
-		},
-		[getFilterArray, updateURL]
-	);
+      if (invalidLabels.length > 0) {
+        // Remove invalid labels from active filters
+        const validActiveLabels = activeLabels.filter((label) => labels.has(label));
+        updateURL({ labels: validActiveLabels });
+      }
+    },
+    [getFilterArray, updateURL]
+  );
 
-	// Filter handlers
-	const handleSortChange = (sort: SortOption) => {
-		updateURL({ sort });
-	};
+  // Filter handlers
+  const handleSortChange = (sort: SortOption) => updateURL({ sort });
+  const handlePageChange = (page: number) => updateURL({ page: page.toString() });
+  const handlePageSizeChange = (limit: number) => updateURL({ limit: limit.toString(), page: '1' });
 
-	const handlePageChange = (page: number) => {
-		updateURL({ page: page.toString() });
-	};
+  const handleLabelToggle = (label: string) => {
+    const currentLabels = getFilterArray('labels');
+    const newLabels = currentLabels.includes(label)
+      ? currentLabels.filter((l) => l !== label)
+      : [...currentLabels, label];
+    updateURL({ labels: newLabels });
+  };
 
-	const handlePageSizeChange = (limit: number) => {
-		updateURL({ limit: limit.toString(), page: '1' });
-	};
+  const handleStatusFilter = (status: string[]) => updateURL({ status });
+  const handleSearchChange = (q: string) => updateURL({ q });
+  const clearAllFilters = () => router.push('/tasks');
 
-	const handleLabelToggle = (label: string) => {
-		const currentLabels = getFilterArray('labels');
-		const newLabels = currentLabels.includes(label)
-			? currentLabels.filter((l) => l !== label)
-			: [...currentLabels, label];
-		updateURL({ labels: newLabels });
-	};
+  // Check if any filters are active
+  const hasActiveFilters = () =>
+    Array.from(searchParams.keys()).some((key) => !['page', 'limit', 'sort'].includes(key));
 
-	const handleStatusFilter = (status: string[]) => {
-		updateURL({ status });
-	};
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.confirm('Delete this task? This action cannot be undone.')) return;
 
-	const handleSearchChange = (q: string) => {
-		updateURL({ q });
-	};
+    try {
+      await apiDelete(`/api/easeful/${taskId}`);
 
-	const clearAllFilters = () => {
-		router.push('/tasks');
-	};
+      // Remove task from local state and update labels
+      setTasks((prevTasks) => {
+        const updatedTasks = prevTasks.filter((task) => task._id !== taskId);
+        updateLabelsFromTasks(updatedTasks);
+        return updatedTasks;
+      });
 
-	// Check if any filters are active
-	const hasActiveFilters = () => {
-		return Array.from(searchParams.keys()).some(
-			(key) => !['page', 'limit', 'sort'].includes(key)
-		);
-	};
+      toast.success('Task deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
+      toast.error(errorMessage);
+    }
+  };
 
-	const handleDeleteTask = async (taskId: string) => {
-		// Show confirmation toast
-		const confirmed = window.confirm(
-			'Are you sure you want to delete this task? This action cannot be undone.'
-		);
+  // Fetch tasks when URL parameters change
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
-		if (!confirmed) return;
+  // Update labels whenever tasks change
+  useEffect(() => {
+    updateLabelsFromTasks(tasks);
+  }, [tasks, updateLabelsFromTasks]);
 
-		try {
-			const res = await fetch(`${API}/api/easeful/${taskId}`, {
-				method: 'DELETE',
-				credentials: 'include',
-			});
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto p-4">
+        <div className="flex justify-center items-center py-12">
+          <div className="loading loading-spinner loading-lg" />
+          <span className="ml-3 text-lg">Loading tasks...</span>
+        </div>
+      </div>
+    );
+  }
 
-			if (!res.ok) {
-				let msg = 'Failed to delete task';
-				try {
-					const err = await res.json();
-					msg = err.error || err.message || msg;
-				} catch {
-					/* ignore */
-				}
-				throw new Error(msg);
-			}
+  const currentSort = (getFilterValue('sort') as SortOption) || '-createdAt';
+  const currentPage = parseInt(getFilterValue('page')) || 1;
+  const currentLimit = parseInt(getFilterValue('limit')) || 10;
+  const activeLabels = getFilterArray('labels');
+  const activeStatuses = getFilterArray('status');
+  const searchQuery = getFilterValue('q');
 
-			// Remove task from local state and update labels
-			setTasks((prevTasks) => {
-				const updatedTasks = prevTasks.filter((task) => task._id !== taskId);
-				updateLabelsFromTasks(updatedTasks);
-				return updatedTasks;
-			});
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Your Tasks</h1>
+          <p className="text-sm text-base-content/70 mt-1">
+            {total > 0 && `Showing ${total} task${total === 1 ? '' : 's'}`}
+            {hasActiveFilters() && ' (filtered)'}
+          </p>
+        </div>
+        <Link href="/tasks/new" className="btn btn-primary btn-lg rounded-full">
+          <i className="fas fa-plus mr-2" />
+          Create New Task
+        </Link>
+      </div>
 
-			// Show success toast
-			toast.success('Task deleted successfully!');
-		} catch (error) {
-			console.error('Error deleting task:', error);
-			const errorMessage =
-				error instanceof Error ? error.message : 'Failed to delete task';
-			toast.error(errorMessage);
-		}
-	};
+      {/* Search Bar */}
+      <SearchBar value={searchQuery} onChange={handleSearchChange} />
 
-	// Fetch tasks when URL parameters change
-	useEffect(() => {
-		fetchTasks();
-	}, [fetchTasks]);
+      {/* Labels Filter Chips */}
+      <LabelFilter labels={userLabels} activeLabels={activeLabels} onToggle={handleLabelToggle} />
 
-	// Update labels whenever tasks change
-	useEffect(() => {
-		updateLabelsFromTasks(tasks);
-	}, [tasks, updateLabelsFromTasks]);
+      {/* Sort and Status Filters */}
+      <TaskFilters
+        currentSort={currentSort}
+        activeStatuses={activeStatuses}
+        hasActiveFilters={hasActiveFilters()}
+        onSortChange={handleSortChange}
+        onStatusFilter={handleStatusFilter}
+        onClearFilters={clearAllFilters}
+      />
 
-	if (loading) {
-		return (
-			<div className='max-w-3xl mx-auto p-4'>
-				<div className='flex justify-center items-center py-12'>
-					<div className='loading loading-spinner loading-lg'></div>
-					<span className='ml-3 text-lg'>Loading tasks...</span>
-				</div>
-			</div>
-		);
-	}
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="loading loading-spinner loading-lg" />
+          <span className="ml-3 text-lg">Loading tasks...</span>
+        </div>
+      ) : tasks.length === 0 ? (
+        /* Empty State */
+        <EmptyState hasActiveFilters={hasActiveFilters()} onClearFilters={clearAllFilters} />
+      ) : (
+        /* Task List and Pagination */
+        <>
+          <ul className="grid gap-3 mb-6">
+            {tasks.map((task) => (
+              <li key={task._id}>
+                <TaskCard task={task} onDelete={handleDeleteTask} showDeleteButton />
+              </li>
+            ))}
+          </ul>
 
-	const currentSort = (getFilterValue('sort') as SortOption) || '-createdAt';
-	const currentPage = parseInt(getFilterValue('page')) || 1;
-	const currentLimit = parseInt(getFilterValue('limit')) || 10;
-	const activeLabels = getFilterArray('labels');
-	const activeStatuses = getFilterArray('status');
-	const searchQuery = getFilterValue('q');
-
-	return (
-		<div className='max-w-4xl mx-auto p-4'>
-			{/* Header */}
-			<div className='flex justify-between items-center mb-6'>
-				<div>
-					<h1 className='text-3xl font-bold'>Your Tasks</h1>
-					<p className='text-sm text-base-content/70 mt-1'>
-						{total > 0 && `Showing ${total} task${total === 1 ? '' : 's'}`}
-						{hasActiveFilters() && ' (filtered)'}
-					</p>
-				</div>
-				<Link href='/tasks/new' className='btn btn-primary btn-lg rounded-full'>
-					<i className='fas fa-plus mr-2'></i>
-					Create New Task
-				</Link>
-			</div>
-
-			{/* Search Bar */}
-			<SearchBar value={searchQuery} onChange={handleSearchChange} />
-
-			{/* Labels Filter Chips */}
-			<LabelFilter
-				labels={userLabels}
-				activeLabels={activeLabels}
-				onToggle={handleLabelToggle}
-			/>
-
-			{/* Sort and Status Filters */}
-			<TaskFilters
-				currentSort={currentSort}
-				activeStatuses={activeStatuses}
-				hasActiveFilters={hasActiveFilters()}
-				onSortChange={handleSortChange}
-				onStatusFilter={handleStatusFilter}
-				onClearFilters={clearAllFilters}
-			/>
-
-			{/* Loading State */}
-			{loading ? (
-				<div className='flex justify-center items-center py-12'>
-					<div className='loading loading-spinner loading-lg'></div>
-					<span className='ml-3 text-lg'>Loading tasks...</span>
-				</div>
-			) : tasks.length === 0 ? (
-				/* Empty State */
-				<EmptyState
-					hasActiveFilters={hasActiveFilters()}
-					onClearFilters={clearAllFilters}
-				/>
-			) : (
-				/* Task List and Pagination */
-				<>
-					<ul className='grid gap-3 mb-6'>
-						{tasks.map((task) => (
-							<li key={task._id}>
-								<TaskCard
-									task={task}
-									onDelete={handleDeleteTask}
-									showDeleteButton={true}
-								/>
-							</li>
-						))}
-					</ul>
-
-					{/* Pagination Controls */}
-					{pagination && (
-						<Pagination
-							pagination={pagination}
-							currentPage={currentPage}
-							currentLimit={currentLimit}
-							total={total}
-							onPageChange={handlePageChange}
-							onPageSizeChange={handlePageSizeChange}
-						/>
-					)}
-				</>
-			)}
-		</div>
-	);
+          {/* Pagination Controls */}
+          {pagination && (
+            <Pagination
+              pagination={pagination}
+              currentPage={currentPage}
+              currentLimit={currentLimit}
+              total={total}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function TasksPage() {
-	return (
-		<RequireAuth>
-			<Suspense
-				fallback={
-					<div className='max-w-3xl mx-auto p-4'>
-						<div className='flex justify-center items-center py-12'>
-							<div className='loading loading-spinner loading-lg'></div>
-							<span className='ml-3 text-lg'>Loading tasks...</span>
-						</div>
-					</div>
-				}>
-				<TasksPageContent />
-			</Suspense>
-		</RequireAuth>
-	);
+  return (
+    <RequireAuth>
+      <Suspense
+        fallback={
+          <div className="max-w-3xl mx-auto p-4">
+            <div className="flex justify-center items-center py-12">
+              <div className="loading loading-spinner loading-lg" />
+              <span className="ml-3 text-lg">Loading tasks...</span>
+            </div>
+          </div>
+        }
+      >
+        <TasksPageContent />
+      </Suspense>
+    </RequireAuth>
+  );
 }

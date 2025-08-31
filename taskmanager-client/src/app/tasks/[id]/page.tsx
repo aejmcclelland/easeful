@@ -7,138 +7,126 @@ import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
 import RequireAuth from '@/components/RequireAuth';
 import type { Task, TaskResponse } from '@/lib/types';
-
-const API = process.env.NEXT_PUBLIC_API_BASE!;
-if (!API) throw new Error('NEXT_PUBLIC_API_BASE is not set');
+import { apiFetch, apiDelete } from '@/lib/api';
 
 export default function TaskDetailPage() {
-	const { id } = useParams<{ id: string }>();
-	const [task, setTask] = useState<Task | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [deleting, setDeleting] = useState(false);
-	const router = useRouter();
+  const { id } = useParams<{ id: string }>();
+  const [task, setTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
-	useEffect(() => {
-		if (!id) return;
-		(async () => {
-			try {
-				const res = await fetch(`${API}/api/easeful/${id}`, {
-					cache: 'no-store',
-					credentials: 'include',
-				});
+  useEffect(() => {
+    if (!id) return;
 
-				if (res.status === 404) {
-					router.push('/tasks');
-					return;
-				}
+    (async () => {
+      try {
+        const json = await apiFetch<TaskResponse | Task>(`/api/easeful/${id}`, {
+          cache: 'no-store',
+        });
 
-				if (res.status === 403) {
-					toast.error('You are not authorized to view this task');
-					router.push('/tasks');
-					return;
-				}
+        // Handle either shape: { data: Task } or Task
+        const maybe = json as TaskResponse;
+        setTask(maybe && 'data' in maybe ? (maybe.data as Task) : (json as Task));
+      } catch (error) {
+        // If the API returned a non-2xx, apiFetch already threw with text/status message
+        const msg = error instanceof Error ? error.message : 'Failed to load task';
+        if (msg.includes('404')) {
+          // Not found -> go back to list
+          router.push('/tasks');
+          return;
+        }
+        if (msg.includes('403')) {
+          toast.error('You are not authorized to view this task');
+          router.push('/tasks');
+          return;
+        }
+        console.error('Error fetching task:', error);
+        toast.error('Failed to load task');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, router]);
 
-				if (!res.ok) {
-					throw new Error(`Failed to fetch task: ${res.status}`);
-				}
+  const handleDeleteTask = async () => {
+    if (!task) return;
+    if (!window.confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      return;
+    }
 
-				const json: TaskResponse | Task = await res.json();
-				setTask(
-					(json as TaskResponse).data
-						? ((json as TaskResponse).data as Task)
-						: (json as Task)
-				);
-			} catch (error) {
-				console.error('Error fetching task:', error);
-				toast.error('Failed to load task');
-			} finally {
-				setLoading(false);
-			}
-		})();
-	}, [id, router]);
+    try {
+      setDeleting(true);
 
-	const handleDeleteTask = async () => {
-		if (!task) return;
-		if (
-			!window.confirm(
-				'Are you sure you want to delete this task? This action cannot be undone.'
-			)
-		)
-			return;
+      const res: Response = await apiDelete(`/api/easeful/${task._id}`);
+      if (!res.ok) {
+        let msg = 'Failed to delete task';
+        try {
+          const body: unknown = await res.json().catch(() => undefined);
+          if (body && typeof body === 'object') {
+            const e = body as { error?: string; message?: string };
+            msg = e.error ?? e.message ?? msg;
+          }
+        } catch {
+          // ignore JSON parse errors
+        }
+        throw new Error(msg);
+      }
 
-		try {
-			setDeleting(true);
+      toast.success('Task deleted successfully!');
+      router.replace('/tasks');
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete task');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-			const res = await fetch(`${API}/api/easeful/${task._id}`, {
-				method: 'DELETE',
-				credentials: 'include',
-			});
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex justify-center items-center py-16">
+          <div className="loading loading-spinner loading-lg" />
+          <span className="ml-3 text-xl">Loading task...</span>
+        </div>
+      </div>
+    );
+  }
 
-			if (!res.ok) {
-				let msg = 'Failed to delete task';
-				try {
-					const err = await res.json();
-					msg = err.error || err.message || msg;
-				} catch {}
-				throw new Error(msg);
-			}
+  if (!task) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Link href="/tasks" className="btn btn-ghost btn-sm rounded-full mb-6">
+          <i className="fas fa-arrow-left mr-2" />
+          Back to tasks
+        </Link>
+        <div className="alert alert-error text-lg">
+          <i className="fas fa-exclamation-triangle text-xl" />
+          <span>Task not found</span>
+        </div>
+      </div>
+    );
+  }
 
-			toast.success('Task deleted successfully!');
-			router.replace('/tasks');
-			router.refresh();
-		} catch (error) {
-			console.error('Error deleting task:', error);
-			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete task'
-			);
-		} finally {
-			setDeleting(false);
-		}
-	};
+  return (
+    <RequireAuth>
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <Link href="/tasks" className="btn btn-ghost btn-sm rounded-full">
+          <i className="fas fa-arrow-left mr-2" />
+          Back to tasks
+        </Link>
 
-	if (loading) {
-		return (
-			<div className='max-w-4xl mx-auto p-6'>
-				<div className='flex justify-center items-center py-16'>
-					<div className='loading loading-spinner loading-lg' />
-					<span className='ml-3 text-xl'>Loading task...</span>
-				</div>
-			</div>
-		);
-	}
+        <TaskCard task={task} onDelete={handleDeleteTask} showDeleteButton />
 
-	if (!task) {
-		return (
-			<div className='max-w-4xl mx-auto p-6'>
-				<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full mb-6'>
-					<i className='fas fa-arrow-left mr-2' />
-					Back to tasks
-				</Link>
-				<div className='alert alert-error text-lg'>
-					<i className='fas fa-exclamation-triangle text-xl' />
-					<span>Task not found</span>
-				</div>
-			</div>
-		);
-	}
-
-	return (
-		<RequireAuth>
-			<div className='max-w-4xl mx-auto p-6 space-y-6'>
-				<Link href='/tasks' className='btn btn-ghost btn-sm rounded-full'>
-					<i className='fas fa-arrow-left mr-2' />
-					Back to tasks
-				</Link>
-
-				<TaskCard task={task} onDelete={handleDeleteTask} showDeleteButton />
-
-				{deleting && (
-					<div className='flex justify-center items-center py-4'>
-						<div className='loading loading-spinner loading-md' />
-						<span className='ml-3'>Deleting task...</span>
-					</div>
-				)}
-			</div>
-		</RequireAuth>
-	);
+        {deleting && (
+          <div className="flex justify-center items-center py-4">
+            <div className="loading loading-spinner loading-md" />
+            <span className="ml-3">Deleting task...</span>
+          </div>
+        )}
+      </div>
+    </RequireAuth>
+  );
 }
