@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const errorHandler = require('./src/middleware/error');
 const cors = require('cors');
+const colors = require('colors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const { xss } = require('express-xss-sanitizer');
