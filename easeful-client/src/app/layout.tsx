@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nunito, Inter } from 'next/font/google';
-import './globals.css';
+import '@/app/globals.css';
+import Navbar from '@/components/Navbar';
 
 const nunito = Nunito({
 	variable: '--font-nunito',
@@ -23,8 +24,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html data-theme='acid' lang='en'>
-			<body className={`${inter.variable} ${nunito.variable} font-sans subpixel-antialiased`}>{children}</body>
+		<html data-theme='cupcake' lang='en'>
+			<body
+				className={`${inter.variable} ${nunito.variable} font-sans subpixel-antialiased`}>
+				<Navbar />
+				<main>{children}</main>
+			</body>
 		</html>
 	);
 }
