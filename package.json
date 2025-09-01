@@ -1,10 +1,10 @@
 {
-    "name": "taskmanager",
+    "name": "easeful",
     "private": true,
     "version": "1.0.0",
     "scripts": {
-        "dev": "pnpm -F taskmanager-server dev & pnpm -F taskmanager-client dev",
-        "dev:server": "pnpm -F taskmanager-server dev",
-        "dev:client": "pnpm -F taskmanager-client dev"
+        "dev": "pnpm -F easeful-server dev & pnpm -F easeful-client dev",
+        "dev:server": "pnpm -F easeful-server dev",
+        "dev:client": "pnpm -F easeful-client dev"
     }
 }

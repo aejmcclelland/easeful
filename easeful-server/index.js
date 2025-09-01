@@ -3,7 +3,6 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
-const colors = require('colors');
 const mongoSanitize = require('express-mongo-sanitize');
 const errorHandler = require('./src/middleware/error');
 const cors = require('cors');
@@ -111,7 +110,7 @@ const server = app.listen(PORT, () => {
 });
 
 //Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
+process.on('unhandledRejection', (err) => {
 	console.log(`Error: ${err.message}`);
 	//Close server & exit process
 	server.close(() => process.exit(1));
