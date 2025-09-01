@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Nunito, Inter } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({
-	variable: '--font-geist-sans',
+const nunito = Nunito({
+	variable: '--font-nunito',
 	subsets: ['latin'],
 });
-
-const geistMono = Geist_Mono({
-	variable: '--font-geist-mono',
+const inter = Inter({
+	variable: '--font-inter',
 	subsets: ['latin'],
+	display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -23,11 +23,8 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html data-theme='cupcake' lang='en'>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				{children}
-			</body>
+		<html data-theme='acid' lang='en'>
+			<body className={`${inter.variable} ${nunito.variable} font-sans subpixel-antialiased`}>{children}</body>
 		</html>
 	);
 }
