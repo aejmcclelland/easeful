@@ -2,26 +2,6 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const User = require('../models/User');
 
-//Helper function to send token response (copied from auth controller)
-const sendTokenResponse = (user, statusCode, res) => {
-	//Create token
-	const token = user.getSignedJwtToken();
-
-	const options = {
-		httpOnly: true,
-		sameSite: 'lax',
-		secure: process.env.NODE_ENV === 'production',
-		path: '/',
-		expires: new Date(
-			Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-		),
-	};
-	res
-		.status(statusCode)
-		.cookie('token', token, options)
-		.json({ success: true, token });
-};
-
 //@desc     Register user
 //@route    POST /api/users/register
 //@access   Public
@@ -36,7 +16,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
 		role: 'user', // Explicitly set role to user
 	});
 
-	sendTokenResponse(user, 200, res);
+	res.status(201).json({ success: true, data: user });
 });
 
 //@desc     Get all users

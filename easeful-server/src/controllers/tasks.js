@@ -1,10 +1,23 @@
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const slugify = require('slugify');
-const multer = require('multer');
 const Tasks = require('../models/Tasks');
 const { storage } = require('../cloudinary/index');
-const upload = multer({ storage: storage });
+
+// Helper: ensure the current user owns the task or is admin
+function ensureOwnerOrAdmin(task, req, next, action = 'perform this action') {
+	const isOwner =
+		task.user?.toString() === req.user._id?.toString?.() ||
+		task.user?.toString() === req.user.id;
+	if (!isOwner && req.user.role !== 'admin') {
+		return next(
+			new ErrorResponse(
+				`User ${req.user.id} is not authorised to ${action}`,
+				403
+			)
+		);
+	}
+}
 
 //@desc     Get all tasks
 //@route    GET /api/easeful
@@ -28,14 +41,8 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 	}
 
 	// Make sure user is task owner (unless they're admin)
-	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorized to view this task`,
-				403
-			)
-		);
-	}
+	const maybeError = ensureOwnerOrAdmin(task, req, next, 'view this task');
+	if (maybeError) return; // ensureOwnerOrAdmin already called next()
 
 	res.status(200).json({ success: true, data: task });
 });
@@ -68,7 +75,7 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 		console.error('Error creating task:', error);
 		if (error.code === 11000) {
 			// Duplicate key error (though we removed unique constraint)
-			return next(new ErrorResponse('Task with this name already exists', 400));
+			return next(new ErrorResponse('Task with this name already exists', 409));
 		}
 		return next(new ErrorResponse('Failed to create task', 500));
 	}
@@ -86,15 +93,8 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	// Make sure user is task owner or admin
-	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorized to update this task`,
-				401
-			)
-		);
-	}
+	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
+	if (maybeError) return;
 
 	// Check current image count
 	const currentCount = task.images ? task.images.length : 0;
@@ -143,7 +143,8 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 			{ images: updatedImages },
 			{ new: true, runValidators: true }
 		);
-
+		if (!updatedTask) return next(new ErrorResponse('Task not found', 404));
+		
 		res.status(200).json({
 			success: true,
 			count: newImages.length,
@@ -167,15 +168,8 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	// Make sure user is task owner or admin
-	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorized to update this task`,
-				401
-			)
-		);
-	}
+	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
+	if (maybeError) return;
 
 	const { public_id } = req.params;
 	const decodedPublicId = decodeURIComponent(public_id);
@@ -219,15 +213,8 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
 		);
 	}
-	//Make sure user is Task owner
-	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorised to update this task`,
-				401
-			)
-		);
-	}
+	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
+	if (maybeError) return;
 
 	//update slug when updating name
 	if (Object.keys(req.body).includes('name')) {
@@ -254,15 +241,8 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	//Make sure user is Task owner
-	if (task.user.toString() !== req.user.id && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorised to delete this task`,
-				401
-			)
-		);
-	}
+	const maybeError = ensureOwnerOrAdmin(task, req, next, 'delete this task');
+	if (maybeError) return;
 
 	task.deleteOne();
 

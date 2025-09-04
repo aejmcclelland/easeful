@@ -12,6 +12,8 @@ const helmet = require('helmet');
 const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
+const {makeSessionStore} = require('./src/utils/sessionStore');
+const mongoose = require('mongoose');
 
 const connectDB = require('./src/config/db');
 //connect to the database
@@ -36,7 +38,7 @@ try {
 const allowedOrigins = [
 	'http://localhost:3000', // Next.js dev server
 	'http://localhost:3001', // React dev server (if used)
-	'https://taskmanager-taskmanager-client.vercel.app',
+	'https://easeful-easeful-client.vercel.app',
 	/\.vercel\.app$/,
 ];
 
@@ -71,6 +73,17 @@ app.use(
 );
 //Cookie parser
 app.use(cookieParser());
+// Initialise session store once Mongo is connected
+mongoose.connection.once('open', async () => {
+	try {
+		const sessions = mongoose.connection.collection('sessions');
+		await sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+		app.set('sessionStore', makeSessionStore(sessions));
+		console.log('Session store initialised (Mongo TTL index active)');
+	} catch (e) {
+		console.error('Failed to initialise session store:', e);
+	}
+});
 // Sanatise data
 app.use(mongoSanitize());
 // Set secure headers

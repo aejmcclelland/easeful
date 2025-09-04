@@ -1,51 +1,54 @@
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('./async');
+// src/middleware/auth.js
 const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/User');
 
-// Protect routes
-exports.protect = asyncHandler(async (req, res, next) => {
-  let token;
+// Protect routes using server-side sessions
+exports.protect = () => {
+	return async (req, res, next) => {
+		try {
+			const sid = req.cookies && req.cookies.sid; // opaque session id cookie
+			if (!sid)
+				return next(
+					new ErrorResponse('Not authorised to access this route', 401)
+				);
 
-  // Prefer: Authorization: Bearer <token>
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  } else if (req.headers['x-auth-token']) {
-    // Allow a custom header as a fallback
-    token = req.headers['x-auth-token'];
-  } else if (req.cookies && req.cookies.token) {
-    // Allow the httpOnly cookie set by login
-    token = req.cookies.token;
-  }
+			const sessionStore = req.app.get('sessionStore');
+			if (!sessionStore || typeof sessionStore.get !== 'function') {
+				return next(new ErrorResponse('Session store not configured', 500));
+			}
 
-  // Ensure token exists
-  if (!token) {
-    return next(new ErrorResponse('Not authorised to access this route', 401));
-  }
+			const session = await sessionStore.get(sid);
+			if (!session)
+				return next(
+					new ErrorResponse('Not authorised to access this route', 401)
+				);
 
-  try {
-    // Verify token and attach user to req
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+			const user = await User.findById(session.userId).select('-password');
+			if (!user)
+				return next(
+					new ErrorResponse('Not authorised to access this route', 401)
+				);
 
-    if (!user) {
-      return next(new ErrorResponse('Not authorised to access this route', 401));
-    }
+			req.user = user; // for your userScope + controllers
+			req.session = session; // if you need session info later
+			next();
+		} catch {
+			return next(
+				new ErrorResponse('Not authorised to access this route', 401)
+			);
+		}
+	};
+};
 
-    req.user = user;
-    next();
-  } catch (err) {
-    return next(new ErrorResponse('Not authorised to access this route', 401));
-  }
-});
-
-// Grant access to specific roles
+// Grant access to specific roles (unchanged)
 exports.authorise = (...roles) => {
 	return (req, res, next) => {
-		if (!roles.includes(req.user.role)) {
+		if (!req.user || !roles.includes(req.user.role)) {
 			return next(
 				new ErrorResponse(
-					`User role ${req.user.role} is not authorized to access this route`,
+					`User role ${
+						req.user?.role ?? 'unknown'
+					} is not authorized to access this route`,
 					403
 				)
 			);
