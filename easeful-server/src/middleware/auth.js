@@ -1,16 +1,20 @@
-// src/middleware/auth.js
 const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/User');
 
 // Protect routes using server-side sessions
 exports.protect = () => {
 	return async (req, res, next) => {
+		const home = process.env.APP_HOME_URL || '/';
+		const wantsHTML = req.accepts(['html', 'json']) === 'html';
+
+		const deny = (msg = 'Not authorised to access this route') => {
+			if (wantsHTML) return res.redirect(302, home);
+			return next(new ErrorResponse(msg, 401));
+		};
+
 		try {
-			const sid = req.cookies && req.cookies.sid; // opaque session id cookie
-			if (!sid)
-				return next(
-					new ErrorResponse('Not authorised to access this route', 401)
-				);
+			const sid = req.cookies && req.cookies.sid;
+			if (!sid) return deny();
 
 			const sessionStore = req.app.get('sessionStore');
 			if (!sessionStore || typeof sessionStore.get !== 'function') {
@@ -18,36 +22,31 @@ exports.protect = () => {
 			}
 
 			const session = await sessionStore.get(sid);
-			if (!session)
-				return next(
-					new ErrorResponse('Not authorised to access this route', 401)
-				);
+			if (!session) return deny();
 
 			const user = await User.findById(session.userId).select('-password');
-			if (!user)
-				return next(
-					new ErrorResponse('Not authorised to access this route', 401)
-				);
+			if (!user) return deny();
 
-			req.user = user; // for your userScope + controllers
-			req.session = session; // if you need session info later
-			next();
-		} catch {
-			return next(
-				new ErrorResponse('Not authorised to access this route', 401)
-			);
+			req.user = user;
+			req.session = session;
+			return next();
+		} catch (err) {
+			return deny();
 		}
 	};
 };
 
-// Grant access to specific roles (unchanged)
+// Grant access to specific roles (unchanged API)
 exports.authorise = (...roles) => {
 	return (req, res, next) => {
-		if (!req.user || !roles.includes(req.user.role)) {
+		if (!req.user || !req.user.role || !roles.includes(req.user.role)) {
+			const home = process.env.APP_HOME_URL || '/';
+			const wantsHTML = req.accepts(['html', 'json']) === 'html';
+			if (wantsHTML) return res.redirect(302, home);
 			return next(
 				new ErrorResponse(
 					`User role ${
-						req.user?.role ?? 'unknown'
+						req.user && req.user.role ? req.user.role : 'unknown'
 					} is not authorized to access this route`,
 					403
 				)
