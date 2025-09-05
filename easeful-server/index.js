@@ -12,7 +12,8 @@ const helmet = require('helmet');
 const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
-const {makeSessionStore} = require('./src/utils/sessionStore');
+const { makeSessionStore } = require('./src/utils/sessionStore');
+const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 
 const connectDB = require('./src/config/db');
@@ -73,6 +74,16 @@ app.use(
 );
 //Cookie parser
 app.use(cookieParser());
+
+app.use(
+	fileUpload({
+		useTempFiles: true, // lets Cloudinary/streams work nicely
+		tempFileDir: '/tmp', // Render/Vercel friendly temp path
+		limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit (match FILE_UPLOAD_LIMIT if you like)
+		abortOnLimit: true,
+		createParentPath: false,
+	})
+);
 // Initialise session store once Mongo is connected
 mongoose.connection.once('open', async () => {
 	try {

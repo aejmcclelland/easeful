@@ -1,18 +1,12 @@
 // app/(protected)/dashboard/page.tsx
-import { cookies } from 'next/headers';
-
-async function getMe() {
-	const res = await fetch('http://localhost:3000/api/auth/me', {
-		credentials: 'include',
-		headers: { cookie: cookies().toString() },
-		cache: 'no-store',
-	});
-	if (!res.ok) return null;
-	return res.json();
-}
+import { getSession } from '@/lib/api';
+import { redirect } from 'next/navigation';
 
 export default async function Page() {
-	const data = await getMe();
-	if (!data) return <meta httpEquiv='refresh' content='0;url=/login' />;
-	return <div>Welcome, {data.data.name}</div>;
+  const me = await getSession();
+  if (!me || me.data.role !== 'admin') {
+    redirect('/profile');
+  }
+
+  return <div>Admin Dashboard – Welcome, {me.data.name}</div>;
 }
