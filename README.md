@@ -1,6 +1,6 @@
-# Taskman - Task Management Application
+# Easeful - Task Management Application
 
-A full-stack task management application built with modern web technologies. Taskman allows users to create, manage, and organize their tasks with advanced features including image uploads, location tracking, user authentication, and avatar management.
+A full-stack task management application built with modern web technologies. Easeful allows users to create, manage, and organize their tasks with advanced features including image uploads, location tracking, user authentication, and avatar management.
 
 ## 🚀 Features
 
