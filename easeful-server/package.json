@@ -1,7 +1,7 @@
 {
   "name": "easeful-server",
   "version": "1.0.0",
-  "description": "Taskman backend API",
+  "description": "Easeful backend API",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production node index.js",
