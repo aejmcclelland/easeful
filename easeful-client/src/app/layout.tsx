@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Nunito, Inter } from 'next/font/google';
 import '@/app/globals.css';
 import Navbar from '@/components/Navbar';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const nunito = Nunito({
 	variable: '--font-nunito',
@@ -29,6 +31,7 @@ export default function RootLayout({
 				className={`${inter.variable} ${nunito.variable} font-sans subpixel-antialiased`}>
 				<Navbar />
 				<main>{children}</main>
+				<ToastContainer position='top-right' autoClose={3000} />
 			</body>
 		</html>
 	);

@@ -11,8 +11,7 @@ async function updateDetailsAction(formData: FormData) {
 	const email = String(formData.get('email') || '').trim();
 
 	if (!name || !email) {
-		cookieStore.set('flashError', 'Missing name or email', { path: '/', maxAge: 10 });
-		cookieStore.delete('flash');
+		cookieStore.set('flashError', 'Missing name or email', { path: '/' });
 		redirect('/profile');
 	}
 
@@ -23,13 +22,11 @@ async function updateDetailsAction(formData: FormData) {
 
 	if (!res.ok) {
 		const j = await res.json().catch(() => ({} as any));
-		cookieStore.set('flashError', j?.error || 'Update failed', { path: '/', maxAge: 10 });
-		cookieStore.delete('flash');
+		cookieStore.set('flashError', j?.error || 'Update failed', { path: '/' });
 		redirect('/profile');
 	}
 
-	cookieStore.set('flash', 'Profile updated successfully.', { path: '/', maxAge: 10 });
-	cookieStore.delete('flashError');
+	cookieStore.set('flash', 'Profile updated successfully.', { path: '/' });
 	redirect('/profile');
 }
 
@@ -42,8 +39,7 @@ async function uploadAvatarAction(formData: FormData) {
 		!file ||
 		(typeof file === 'object' && 'size' in file && file.size === 0)
 	) {
-		cookieStore.set('flashError', 'Please choose an image', { path: '/', maxAge: 10 });
-		cookieStore.delete('flash');
+		cookieStore.set('flashError', 'Please choose an image', { path: '/' });
 		redirect('/profile');
 	}
 
@@ -54,13 +50,11 @@ async function uploadAvatarAction(formData: FormData) {
 
 	if (!res.ok) {
 		const j = await res.json().catch(() => ({} as any));
-		cookieStore.set('flashError', j?.error || 'Avatar upload failed', { path: '/', maxAge: 10 });
-		cookieStore.delete('flash');
+		cookieStore.set('flashError', j?.error || 'Avatar upload failed', { path: '/' });
 		redirect('/profile');
 	}
 
-	cookieStore.set('flash', 'Avatar updated', { path: '/', maxAge: 10 });
-	cookieStore.delete('flashError');
+	cookieStore.set('flash', 'Avatar updated', { path: '/' });
 	redirect('/profile');
 }
 
@@ -86,15 +80,16 @@ export default async function Page() {
 						</div>
 
 						{/* Alerts */}
-						{errorMsg ? (
-							<div role='alert' className='alert alert-error'>
-								<span>{errorMsg}</span>
-							</div>
-						) : updatedMsg ? (
+						{updatedMsg && (
 							<div role='alert' className='alert alert-success'>
 								<span>{updatedMsg}</span>
 							</div>
-						) : null}
+						)}
+						{errorMsg && (
+							<div role='alert' className='alert alert-error'>
+								<span>{errorMsg}</span>
+							</div>
+						)}
 
 						{/* Header row with avatar + name/email */}
 						<div className='flex items-center gap-4 py-2'>
@@ -118,16 +113,14 @@ export default async function Page() {
 							{/* Avatar upload (right side) */}
 							<form
 								action={uploadAvatarAction}
-								className='flex flex-wrap items-center gap-3'>
+								className='flex items-center gap-2'>
 								<input
 									type='file'
 									name='avatar'
 									accept='image/*'
-									className='file-input file-input-primary file-input-sm rounded-full w-auto'
+									className='file-input file-input-bordered file-input-sm'
 								/>
-								<button type='submit' className='btn btn-sm btn-primary rounded-full'>
-									Upload
-								</button>
+								<button className='btn btn-sm btn-outline'>Upload</button>
 							</form>
 						</div>
 
@@ -160,10 +153,10 @@ export default async function Page() {
 								/>
 
 								<div className='flex justify-end gap-3 mt-4'>
-									<button type='submit' className='btn btn-primary rounded-full hover:opacity-90'>
+									<button type='submit' className='btn btn-primary'>
 										Save changes
 									</button>
-									<a href='/' className='btn rounded-full hover:bg-base-200'>
+									<a href='/' className='btn btn-ghost'>
 										Cancel
 									</a>
 								</div>
