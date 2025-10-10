@@ -35,13 +35,11 @@ try {
 	console.warn('Unable to parse MONGO_URI:', e.message);
 }
 //use CORS middleware
-// Allow requests from localhost:3001 (your React app's development server)
+// Allow requests from localhost:3001 
 const allowedOrigins = [
-	'http://localhost:3000', // Next.js dev server
-	'http://localhost:3001', // React dev server (if used)
-	'https://easeful-easeful-client.vercel.app',
-	/\.vercel\.app$/,
-];
+	process.env.APP_HOME_URL,
+	'http://localhost:3000',
+].filter(Boolean);
 
 app.use(
 	cors({

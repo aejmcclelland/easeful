@@ -1,11 +1,32 @@
 // Navbar component using DaisyUI v5 + Next.js App Router
+'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getSession } from '@/lib/api';
 
-export default async function Navbar() {
-	const me = await getSession();
-	const avatarUrl = (me?.data as any)?.avatar?.url as string | undefined;
-	const displayName = (me?.data as any)?.name || 'User';
+interface SessionUser {
+  name?: string;
+  avatar?: { url?: string };
+}
+
+export default function Navbar() {
+  const [me, setMe] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setMe(data?.data);
+        }
+      } catch (e) {
+        console.error('Session fetch failed', e);
+      }
+    })();
+  }, []);
+
+  const avatarUrl = me?.avatar?.url;
+  const displayName = me?.name ?? 'User';
 
 	return (
 		<div className='navbar bg-primary text-primary-content sticky top-0 z-50 shadow-sm'>

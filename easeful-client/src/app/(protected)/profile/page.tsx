@@ -1,12 +1,19 @@
 // app/(protected)/profile/page.tsx
-import { getSession, apiJson, apiForm } from '@/lib/api';
+export const dynamic = 'force-dynamic';
+import {
+	getSession,
+	apiJson,
+	apiForm,
+	safeJson,
+} from '@/lib/api';
 import { redirect } from 'next/navigation';
-import { cookies as nextCookies } from 'next/headers';
+import Link from 'next/link';
+import { cookies } from 'next/headers';
 
 // --- Server Action: update details ---
 async function updateDetailsAction(formData: FormData) {
 	'use server';
-	const cookieStore = await nextCookies();
+	const cookieStore = await cookies();
 	const name = String(formData.get('name') || '').trim();
 	const email = String(formData.get('email') || '').trim();
 
@@ -21,7 +28,7 @@ async function updateDetailsAction(formData: FormData) {
 	});
 
 	if (!res.ok) {
-		const j = await res.json().catch(() => ({} as any));
+		const j = await safeJson<{ error?: string }>(res);
 		cookieStore.set('flashError', j?.error || 'Update failed', { path: '/' });
 		redirect('/profile');
 	}
@@ -33,24 +40,24 @@ async function updateDetailsAction(formData: FormData) {
 // --- Server Action: upload avatar ---
 async function uploadAvatarAction(formData: FormData) {
 	'use server';
-	const cookieStore = await nextCookies();
+	const cookieStore = await cookies();
 	const file = formData.get('avatar') as File | null;
-	if (
-		!file ||
-		(typeof file === 'object' && 'size' in file && file.size === 0)
-	) {
+
+	if (!file || file.size === 0) {
 		cookieStore.set('flashError', 'Please choose an image', { path: '/' });
 		redirect('/profile');
 	}
 
 	const fd = new FormData();
-	if (file) fd.append('avatar', file);
+	fd.append('avatar', file);
 
 	const res = await apiForm('/api/auth/updateavatar', fd, { method: 'PUT' });
 
 	if (!res.ok) {
-		const j = await res.json().catch(() => ({} as any));
-		cookieStore.set('flashError', j?.error || 'Avatar upload failed', { path: '/' });
+		const j = await safeJson<{ error?: string }>(res);
+		cookieStore.set('flashError', j?.error || 'Avatar upload failed', {
+			path: '/',
+		});
 		redirect('/profile');
 	}
 
@@ -58,28 +65,29 @@ async function uploadAvatarAction(formData: FormData) {
 	redirect('/profile');
 }
 
+// --- Page Component ---
 export default async function Page() {
 	const me = await getSession();
-	if (!me) redirect('/login');
+	if (!me || me.data?.role !== 'admin') {
+		redirect('/profile');
+	}
 
-	const cookieStore = await nextCookies();
-	const updatedMsg = cookieStore.get('flash')?.value || null;
-	const errorMsg = cookieStore.get('flashError')?.value || null;
+	const cookieStore = await cookies();
+	const updatedMsg = cookieStore.get('flash')?.value ?? null;
+	const errorMsg = cookieStore.get('flashError')?.value ?? null;
 
-	// Prefer email/name for header; avatar URL if present
-	const avatarUrl = me.data?.avatar?.url as string | undefined;
+	const avatarUrl = me.data?.avatar?.url;
+	const name = me.data?.name ?? '';
+	const email = me.data?.email ?? '';
 
 	return (
 		<main className='min-h-screen bg-base-100 p-6'>
 			<div className='mx-auto w-full md:w-1/2 max-w-3xl'>
 				<div className='card bg-base-100 shadow-xl rounded-box'>
 					<div className='card-body'>
-						<div className='flex items-center justify-between'>
-							<h1 className='text-2xl font-bold'>Profile</h1>
-							{/* Optional close button/place-holder */}
-						</div>
+						<h1 className='text-2xl font-bold mb-2'>Profile</h1>
 
-						{/* Alerts */}
+						{/* Flash messages */}
 						{updatedMsg && (
 							<div role='alert' className='alert alert-success'>
 								<span>{updatedMsg}</span>
@@ -91,11 +99,10 @@ export default async function Page() {
 							</div>
 						)}
 
-						{/* Header row with avatar + name/email */}
+						{/* Header row with avatar + user info */}
 						<div className='flex items-center gap-4 py-2'>
 							<div className='avatar'>
 								<div className='w-16 rounded-full ring ring-base-300 ring-offset-base-100 ring-offset-2 overflow-hidden'>
-									{/* Fallback circle if no avatar */}
 									{avatarUrl ? (
 										// eslint-disable-next-line @next/next/no-img-element
 										<img src={avatarUrl} alt='Avatar' />
@@ -105,12 +112,10 @@ export default async function Page() {
 								</div>
 							</div>
 							<div className='flex-1'>
-								<div className='font-semibold'>{me.data.name}</div>
-								<div className='text-sm text-base-content/70'>
-									{me.data.email}
-								</div>
+								<div className='font-semibold'>{name}</div>
+								<div className='text-sm opacity-70'>{email}</div>
 							</div>
-							{/* Avatar upload (right side) */}
+							{/* Avatar upload */}
 							<form
 								action={uploadAvatarAction}
 								className='flex items-center gap-2'>
@@ -126,7 +131,7 @@ export default async function Page() {
 
 						<div className='divider my-2' />
 
-						{/* Details fieldset */}
+						{/* Account details form */}
 						<form action={updateDetailsAction}>
 							<fieldset className='fieldset bg-base-200 border border-base-300 rounded-box p-6'>
 								<legend className='fieldset-legend text-lg'>
@@ -136,7 +141,7 @@ export default async function Page() {
 								<label className='label'>Name</label>
 								<input
 									name='name'
-									defaultValue={me.data.name}
+									defaultValue={name}
 									className='input input-bordered w-full'
 									placeholder='Your name'
 									required
@@ -146,7 +151,7 @@ export default async function Page() {
 								<input
 									type='email'
 									name='email'
-									defaultValue={me.data.email}
+									defaultValue={email}
 									className='input input-bordered w-full'
 									placeholder='you@example.com'
 									required
@@ -156,9 +161,9 @@ export default async function Page() {
 									<button type='submit' className='btn btn-primary'>
 										Save changes
 									</button>
-									<a href='/' className='btn btn-ghost'>
+									<Link href='/' className='btn btn-ghost'>
 										Cancel
-									</a>
+									</Link>
 								</div>
 							</fieldset>
 						</form>

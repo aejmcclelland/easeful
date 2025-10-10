@@ -5,8 +5,8 @@ const COOKIE_NAME = 'sid';
 function sessionCookieOptions(days = 1) {
 	return {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === 'production',
-		sameSite: 'lax', // use 'none' only if truly cross-site
+		secure: 'none',
+		sameSite: 'none', // use 'none' only if truly cross-site
 		path: '/',
 		maxAge: days * DAY,
 	};

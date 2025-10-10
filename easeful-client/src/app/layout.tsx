@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Nunito, Inter } from 'next/font/google';
-import '@/app/globals.css';
+import './globals.css';
 import Navbar from '@/components/Navbar';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

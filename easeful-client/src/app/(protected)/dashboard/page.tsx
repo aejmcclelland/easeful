@@ -1,12 +1,13 @@
 // app/(protected)/dashboard/page.tsx
+export const dynamic = 'force-dynamic';
 import { getSession } from '@/lib/api';
 import { redirect } from 'next/navigation';
 
 export default async function Page() {
-  const me = await getSession();
-  if (!me || me.data.role !== 'admin') {
-    redirect('/profile');
-  }
+	const me = await getSession();
+	if (!me || me.data?.role !== 'admin') {
+		redirect('/profile');
+	}
 
-  return <div>Admin Dashboard – Welcome, {me.data.name}</div>;
+	return <div>Admin Dashboard – Welcome, {me.data.name}</div>;
 }

@@ -1,19 +1,16 @@
 // src/lib/api.ts
 import { headers as nextHeaders, cookies as nextCookies } from 'next/headers';
 
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
-
-// ...existing code...
 async function getBaseUrl(): Promise<string> {
+	// In the browser, use relative URLs so Next's rewrite applies automatically
 	if (typeof window !== 'undefined') return '';
-	if (API_ORIGIN) return API_ORIGIN; // ✅ use this when defined
+	// On the server, build absolute URL for fetch to avoid "Invalid URL" with relative paths
 	const h = await nextHeaders();
 	const proto = h.get('x-forwarded-proto') ?? 'http';
 	const host = h.get('host');
 	if (!host) throw new Error('Missing host header');
 	return `${proto}://${host}`;
 }
-// ...existing code...
 export async function apiGet(path: string, init: RequestInit = {}) {
 	const base = await getBaseUrl();
 	const url = `${base}${path}`;
@@ -21,11 +18,11 @@ export async function apiGet(path: string, init: RequestInit = {}) {
 	// Merge headers and forward incoming cookies on the server
 	const hdrs = new Headers(init.headers);
 	if (typeof window === 'undefined') {
-		const cookieStore = await nextCookies(); // <-- await here
+		const cookieStore = await nextCookies();
 		const cookieStr = cookieStore.toString();
 		if (cookieStr) hdrs.set('cookie', cookieStr);
 	}
-	hdrs.set('Accept', 'application/json');
+
 	const res = await fetch(url, {
 		...init,
 		headers: hdrs,
@@ -35,38 +32,15 @@ export async function apiGet(path: string, init: RequestInit = {}) {
 	return res;
 }
 
-export interface SessionUser {
-	name?: string;
-	email?: string;
-	avatar?: { url?: string };
-	role?: string;
+export async function getSession() {
+	const res = await apiGet('/api/auth/me');
+	if (!res.ok) return null;
+	return res.json(); // { success: true, data: {...user} }
 }
 
-export interface SessionResponse {
-	success: boolean;
-	data?: SessionUser;
-	error?: string;
-}
-
-export async function getSession(): Promise<SessionResponse | null> {
-	try {
-		const res = await apiGet('/api/auth/me');
-		if (!res.ok) return null;
-		return (await res.json()) as SessionResponse;
-	} catch (err) {
-		console.error('Session fetch failed:', err);
-		return null;
-	}
-}
-
-export async function getSessionUser(): Promise<SessionUser | null> {
-	const s = await getSession();
-	return s?.success ? s.data ?? null : null;
-}
-
-export async function apiJson(
+export async function apiJson<T = unknown>(
 	path: string,
-	opts: { method?: string; body?: unknown; headers?: HeadersInit } = {}
+	opts: { method?: string; body?: any; headers?: HeadersInit } = {}
 ): Promise<Response> {
 	const { method = 'POST', body, headers } = opts;
 	const base = await getBaseUrl();
@@ -76,11 +50,11 @@ export async function apiJson(
 	hdrs.set('Content-Type', 'application/json');
 
 	if (typeof window === 'undefined') {
-		const cookieStore = await nextCookies(); // <-- await here
+		const cookieStore = await nextCookies();
 		const cookieStr = cookieStore.toString();
 		if (cookieStr) hdrs.set('cookie', cookieStr);
 	}
-	hdrs.set('Accept', 'application/json');
+
 	return fetch(url, {
 		method,
 		headers: hdrs,
@@ -89,7 +63,6 @@ export async function apiJson(
 		body: body !== undefined ? JSON.stringify(body) : undefined,
 	});
 }
-// ...existing code...
 export async function apiForm(
 	path: string,
 	formData: FormData,
@@ -104,11 +77,11 @@ export async function apiForm(
 	// DO NOT set Content-Type; let fetch set the multipart boundary automatically
 
 	if (typeof window === 'undefined') {
-		const cookieStore = await nextCookies(); // <-- await here
+		const cookieStore = await nextCookies(); // already imported at top
 		const cookieStr = cookieStore.toString();
 		if (cookieStr) hdrs.set('cookie', cookieStr);
 	}
-	hdrs.set('Accept', 'application/json');
+
 	return fetch(url, {
 		method,
 		headers: hdrs,
@@ -116,14 +89,4 @@ export async function apiForm(
 		cache: 'no-store',
 		body: formData,
 	});
-}
-// ...existing code...
-
-// A small utility to safely parse JSON responses without using `any`
-export async function safeJson<T>(res: Response): Promise<T | null> {
-	try {
-		return (await res.json()) as T;
-	} catch {
-		return null;
-	}
 }
