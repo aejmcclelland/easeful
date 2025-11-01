@@ -26,19 +26,46 @@ export default function Login() {
 		}
 	};
 	return (
-		<form onSubmit={onSubmit}>
-			<input
-				value={email}
-				onChange={(e) => setEmail(e.target.value)}
-				placeholder='Email'
-			/>
-			<input
-				type='password'
-				value={password}
-				onChange={(e) => setPassword(e.target.value)}
-				placeholder='Password'
-			/>
-			<button type='submit'>Login</button>
-		</form>
+		<div className="flex justify-center items-center min-h-screen">
+			<div className="card w-96 bg-base-100 shadow-sm">
+				<div className="card-body">
+					<h2 className="card-title justify-center">Sign In</h2>
+					<p className="text-center mb-4">to continue to your Easeful Account</p>
+					<form onSubmit={onSubmit} className="space-y-3">
+						<fieldset className="fieldset bg-base-200 border-base-300 rounded-box border p-4">
+							<legend className="fieldset-legend">Login</legend>
+
+							<label className="label">Email</label>
+							<input
+								type="email"
+								className="input w-full"
+								placeholder="Email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								required
+							/>
+
+							<label className="label">Password</label>
+							<input
+								type="password"
+								className="input w-full"
+								placeholder="Password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								required
+							/>
+
+							<button type="submit" className="btn btn-neutral w-full mt-4">
+								Login
+							</button>
+						</fieldset>
+					</form>
+					<div className="text-center mt-3">
+						<span className="opacity-70">Don't have an account? </span>
+						<a className="link" href="/register">Sign up</a>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }

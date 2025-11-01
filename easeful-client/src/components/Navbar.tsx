@@ -1,6 +1,6 @@
 // src/components/Navbar.tsx
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
 	const { user, logout } = useAuth();
@@ -8,9 +8,9 @@ export default function Navbar() {
 	return (
 		<div className='navbar bg-base-100'>
 			<div className='flex-1'>
-				<a className='btn btn-ghost text-xl' href='/'>
+				<Link className='btn btn-ghost text-xl' to='/'>
 					Easeful
-				</a>
+				</Link>
 			</div>
 			<div className='flex-none gap-2'>
 				{user ? (
@@ -18,27 +18,26 @@ export default function Navbar() {
 						<span className='hidden sm:inline opacity-70'>
 							Hi, {user.name.split(' ')[0]}
 						</span>
-						<a className='btn btn-ghost' href='/profile'>
+						<Link className='btn btn-ghost' to='/profile'>
 							Profile
-						</a>
+						</Link>
 						<button
-							className="btn btn-outline"
+							className='btn btn-outline'
 							onClick={async () => {
 								await logout();
 								nav('/', { replace: true });
-							}}
-						>
+							}}>
 							Logout
 						</button>
 					</>
 				) : (
 					<>
-						<a className='btn btn-ghost' href='/register'>
+						<Link className='btn btn-ghost' to='/register'>
 							Register
-						</a>
-						<a className='btn btn-primary' href='/login'>
+						</Link>
+						<Link className='btn btn-primary' to='/login'>
 							Login
-						</a>
+						</Link>
 					</>
 				)}
 			</div>

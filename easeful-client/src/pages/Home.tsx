@@ -1,5 +1,6 @@
 //pages/Home.tsx
-import React from 'react';export default function Home() {
+
+export default function Home() {
 	return (
 		<div className='flex flex-col items-center justify-center min-h-[70vh] text-center'>
 			<h1 className='text-4xl font-bold mb-4 text-primary'>
@@ -10,7 +11,7 @@ import React from 'react';export default function Home() {
 				beautiful app.
 			</p>
 
-			<div className='flex gap-4'>
+			<div className='flex justify-center gap-4'>
 				<a href='/login' className='btn btn-primary'>
 					Get Started
 				</a>

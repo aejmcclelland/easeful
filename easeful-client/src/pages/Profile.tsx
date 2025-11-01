@@ -1,55 +1,38 @@
 // src/pages/Profile.tsx
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-type User = {
-	_id: string;
-	name: string;
-	email: string;
-	avatar?: { url?: string };
-};
+import { useAuth } from '../context/AuthContext';
+import AvatarUploader from '../components/AvatarUploader';
 
 export default function Profile() {
-	const [user, setUser] = useState<User | null>(null);
-	const [loading, setLoading] = useState(true);
+	const { user, loading } = useAuth();
 	const nav = useNavigate();
 
+	// If not authenticated (after auth has loaded), go home
 	useEffect(() => {
-		let redirected = false;
-		(async () => {
-			try {
-				const res = await fetch('/api/auth/me', { credentials: 'include' });
-				const data = await res.json();
-				if (!res.ok) throw new Error(String(res.status));
-				setUser(data.data);
-			} catch {
-				if (!redirected) {
-					redirected = true;
-					nav('/', { replace: true });
-				}
-			} finally {
-				setLoading(false);
-			}
-		})();
-	}, [nav]);
+		if (!loading && !user) {
+			nav('/', { replace: true });
+		}
+	}, [loading, user, nav]);
 
-	if (loading) return <p>Loading…</p>;
-	if (!user) return null;
+	if (loading || !user) return null; // App-level <LoadingScreen /> will cover loading
 
 	return (
-		<div className='card bg-base-100 shadow p-6 max-w-lg'>
-			<div className='flex items-center gap-4'>
-				<div className='avatar'>
-					<div className='w-16 rounded-full'>
-						<img
-							src={user.avatar?.url || 'https://placehold.co/128x128?text=User'}
-							alt='avatar'
-						/>
-					</div>
+		<div className='card bg-base-100 shadow p-6 max-w-2xl mx-auto'>
+			<h1 className='text-2xl font-semibold mb-4 justify-center'>Profile</h1>
+			<div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+				<div className='lg:col-span-1'>
+					<AvatarUploader currentUrl={user.avatar?.url} />
 				</div>
-				<div>
-					<h1 className='text-2xl font-semibold'>{user.name}</h1>
-					<p className='text-sm opacity-70'>{user.email}</p>
+				<div className='lg:col-span-2 space-y-3'>
+					<div>
+						<div className='label'>Name</div>
+						<div className='font-medium'>{user.name}</div>
+					</div>
+					<div>
+						<div className='label'>Email</div>
+						<div className='font-medium'>{user.email}</div>
+					</div>
 				</div>
 			</div>
 		</div>
