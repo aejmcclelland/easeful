@@ -6,6 +6,16 @@ const User = require('../models/User');
 const { cloudinary } = require('../cloudinary');
 const { COOKIE_NAME, sessionCookieOptions, DAY } = require('../config/cookies');
 const fs = require('fs');
+const isProd = process.env.NODE_ENV === 'production';
+
+const cookieOptions = {
+	httpOnly: true,
+	secure: isProd, // 🔑 false in local dev (http)
+	sameSite: isProd ? 'none' : 'lax', // 🔑 'lax' in dev so it works on http://localhost
+	path: '/',
+	maxAge: 24 * 60 * 60 * 1000, // 1 day
+};
+
 
 async function sendSession(user, req, res, statusCode = 200) {
 	const days = Number(process.env.SESSION_COOKIE_EXPIRE || 1);
@@ -19,7 +29,7 @@ async function sendSession(user, req, res, statusCode = 200) {
 	const sid = await sessionStore.create(user._id, ttlMs);
 	return res
 		.status(statusCode)
-		.cookie(COOKIE_NAME, sid, sessionCookieOptions(days))
+		.cookie(COOKIE_NAME, sid, cookieOptions)
 		.json({ success: true });
 }
 
@@ -49,27 +59,34 @@ exports.login = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Logout user
-// @route   GET /api/auth/logout
+// @route   POST /api/auth/logout
 // @access  Private
 exports.logout = asyncHandler(async (req, res) => {
-	const sid = req.cookies?.sid;
-	if (sid) {
+	try {
+		const sid = req.cookies?.[COOKIE_NAME];
 		const store = req.app.get('sessionStore');
-		if (store) await store.destroy(sid);
+		if (sid && store && typeof store.destroy === 'function') {
+			await store.destroy(sid);
+		}
+	} catch (_) {
+		// ignore store errors on logout
 	}
-	res.clearCookie(COOKIE_NAME, { path: '/' });
-	const home = process.env.APP_HOME_URL || '/';
-	const wantsHTML = req.accepts(['html', 'json']) === 'html';
-	if (wantsHTML) return res.redirect(302, home);
-	return res.status(200).json({ success: true, data: {} });
+
+	res.clearCookie(COOKIE_NAME, {
+		path: '/',
+		httpOnly: true,
+		secure: isProd,
+		sameSite: isProd ? 'none' : 'lax',
+	});
+
+	return res.status(200).json({ success: true });
 });
 
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
 exports.getMe = asyncHandler(async (req, res) => {
-	const user = req.user; // set by session protect middleware
-	res.status(200).json({ success: true, data: user });
+	res.status(200).json({ success: true, data: req.user });
 });
 
 // @desc    Update user details

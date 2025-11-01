@@ -35,20 +35,28 @@ try {
 	console.warn('Unable to parse MONGO_URI:', e.message);
 }
 //use CORS middleware
-// Allow requests from localhost:3001 
+// Allow requests from localhost:3001
 const allowedOrigins = [
-	process.env.APP_HOME_URL,
-	'http://localhost:3000',
-].filter(Boolean);
+	'http://localhost:3001',
+	'https://easeful-client.vercel.app',
+];
 
 app.use(
 	cors({
-		origin: allowedOrigins,
-		methods: ['GET', 'POST', 'PUT', 'DELETE'],
-		allowedHeaders: ['Content-Type', 'Authorization'],
+		origin: function (origin, callback) {
+			if (!origin) return callback(null, true);
+			if (allowedOrigins.includes(origin)) return callback(null, true);
+			console.warn(`CORS blocked request from: ${origin}`);
+			return callback(new Error('Not allowed by CORS'));
+		},
 		credentials: true,
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization'],
 	})
 );
+
+app.options('*', cors());
+
 //Development logging middleware
 if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('dev'));
