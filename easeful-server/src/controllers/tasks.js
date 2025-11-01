@@ -34,9 +34,24 @@ function ensureOwnerOrAdmin(task, req, action = 'perform this action') {
 //@route    GET /api/easeful
 //@access   Private
 exports.getTasks = asyncHandler(async (req, res, next) => {
-	// userScope middleware has already added the user filter
-	// advancedResults middleware has already executed the user-scoped query
-	res.status(200).json(res.advancedResults);
+	// Filter tasks by current user; allow optional status/priority/q filters
+	const { status, priority, q } = req.query || {};
+
+	const filter = { user: req.user._id || req.user.id };
+	if (status) filter.status = status;
+	if (priority) filter.priority = priority;
+	if (q && typeof q === 'string' && q.trim()) {
+		const rx = new RegExp(q.trim(), 'i');
+		filter.$or = [{ task: rx }, { description: rx }, { labels: rx }];
+	}
+
+	const tasks = await Tasks.find(filter).sort({ dueDate: 1, createdAt: -1 });
+
+	return res.status(200).json({
+		success: true,
+		count: tasks.length,
+		data: tasks,
+	});
 });
 
 //@desc     Get one task
@@ -62,11 +77,23 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 //@access   Private
 exports.createTask = asyncHandler(async (req, res, next) => {
 	try {
-		//Add user to req.body
+		// Add user to req.body
 		req.body.user = req.user.id;
+
+		// Ensure a title exists (accept either "task" or "name")
+		const title = (req.body.task ?? req.body.name ?? '').toString().trim();
+		if (!title) {
+			return next(new ErrorResponse('Title is required', 400));
+		}
+		req.body.task = title;
+		req.body.name = title;
 
 		// Enforce max 5 images on create
 		if (req.files && req.files.length > 5) {
+			// Clean up any already-uploaded files to Cloudinary
+			for (const f of req.files) {
+				try { await cloudinary.uploader.destroy(f.filename); } catch (_) {}
+			}
 			return next(new ErrorResponse('You can attach at most 5 images to a task', 400));
 		}
 
@@ -85,12 +112,15 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 		}
 
 		// Create the task - users can create multiple tasks
-		const task = await Tasks.create({ ...req.body, images: images });
+		const task = await Tasks.create({ ...req.body, images });
 		res.status(201).json({ success: true, data: task });
 	} catch (error) {
 		console.error('Error creating task:', error);
+		if (error?.name === 'ValidationError' && error.errors) {
+			const message = Object.values(error.errors).map((e) => e.message).join('; ');
+			return next(new ErrorResponse(message, 400));
+		}
 		if (error.code === 11000) {
-			// Duplicate key error (though we removed unique constraint)
 			return next(new ErrorResponse('Task with this name already exists', 409));
 		}
 		return next(new ErrorResponse('Failed to create task', 500));
@@ -101,75 +131,63 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 //@route    PUT /api/easeful/:id/photo
 //@access   Private
 exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
-	const task = await Tasks.findById(req.params.id);
+	const { id } = req.params;
+	const task = await Tasks.findById(id);
 
 	if (!task) {
-		return next(
-			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
-		);
+		return next(new ErrorResponse(`Task not found with id of ${req.params.id}`, 404));
 	}
 
 	const maybeError = ensureOwnerOrAdmin(task, req, 'update this task');
 	if (maybeError) return next(maybeError);
 
-	// Check current image count
-	const currentCount = task.images ? task.images.length : 0;
-	const maxImages = 5;
-
-	if (currentCount >= maxImages) {
-		return next(
-			new ErrorResponse(`Task already has maximum ${maxImages} images`, 400)
-		);
-	}
-
-	// Check if files were uploaded
-	if (!req.files || req.files.length === 0) {
+	// Ensure files were uploaded
+	if (!Array.isArray(req.files) || req.files.length === 0) {
 		return next(new ErrorResponse('Please upload at least one file', 400));
 	}
 
-	// Check if upload would exceed limit
-	const uploadCount = req.files.length;
-	if (currentCount + uploadCount > maxImages) {
-		return next(
-			new ErrorResponse(
-				`Can only upload ${
-					maxImages - currentCount
-				} more images (${uploadCount} provided)`,
-				400
-			)
-		);
+	const MAX_IMAGES = 5;
+	const currentCount = Array.isArray(task.images) ? task.images.length : 0;
+
+	// If task already at cap, delete any just-uploaded files from Cloudinary and reject
+	if (currentCount >= MAX_IMAGES) {
+		for (const f of req.files) {
+			try { await cloudinary.uploader.destroy(f.filename); } catch (_) {}
+		}
+		return next(new ErrorResponse(`Task already has maximum ${MAX_IMAGES} images`, 400));
 	}
 
-	try {
-		// Process uploaded images from Cloudinary
-		const newImages = req.files.map((file) => ({
-			public_id: file.filename, // Cloudinary returns filename as the public_id
-			url: file.path, // Cloudinary returns path as the secure URL
-			width: file.width || undefined,
-			height: file.height || undefined,
-			bytes: file.size || undefined,
-		}));
+	// Determine how many from this batch we can accept
+	const remaining = MAX_IMAGES - currentCount;
+	const allowedCount = Math.min(remaining, req.files.length);
 
-		// Add new images to existing ones
-		const updatedImages = [...(task.images || []), ...newImages];
-
-		// Update task with new images
-		const updatedTask = await Tasks.findByIdAndUpdate(
-			req.params.id,
-			{ images: updatedImages },
-			{ new: true, runValidators: true }
-		);
-		if (!updatedTask) return next(new ErrorResponse('Task not found', 404));
-		
-		res.status(200).json({
-			success: true,
-			count: newImages.length,
-			data: updatedTask,
-		});
-	} catch (error) {
-		console.error('Error uploading images:', error);
-		return next(new ErrorResponse('Problem with file upload', 500));
+	// If the batch exceeds remaining capacity, delete the extra files from Cloudinary
+	if (allowedCount < req.files.length) {
+		for (let i = allowedCount; i < req.files.length; i++) {
+			const over = req.files[i];
+			try { await cloudinary.uploader.destroy(over.filename); } catch (_) {}
+		}
 	}
+
+	// Map only the accepted files
+	const acceptedFiles = req.files.slice(0, allowedCount);
+	const newImages = acceptedFiles.map((file) => ({
+		public_id: file.filename,     // Cloudinary public_id via CloudinaryStorage
+		url: file.path,               // secure URL
+		width: file.width || undefined,
+		height: file.height || undefined,
+		bytes: file.size || undefined,
+	}));
+
+	// Persist to task
+	task.images = [...(task.images || []), ...newImages];
+	await task.save();
+
+	return res.status(200).json({
+		success: true,
+		count: newImages.length,
+		data: task,
+	});
 });
 
 //@desc     Delete single image from task
@@ -258,6 +276,14 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 
 	const maybeError = ensureOwnerOrAdmin(task, req, 'delete this task');
 	if (maybeError) return next(maybeError);
+
+	// Best-effort: clean up Cloudinary images for this task
+	if (Array.isArray(task.images) && task.images.length) {
+		for (const img of task.images) {
+			if (!img?.public_id) continue;
+			try { await cloudinary.uploader.destroy(img.public_id); } catch (_) {}
+		}
+	}
 
 	await task.deleteOne();
 

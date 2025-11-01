@@ -18,6 +18,11 @@ const taskSchema = new mongoose.Schema(
 		dueDate: {
 			type: Date,
 		},
+		quickDue: {
+			type: String,
+			enum: ['none', 'today', 'tomorrow', 'date'],
+			default: 'none',
+		},
 		priority: {
 			type: String,
 			enum: ['Low', 'Medium', 'High'],
@@ -27,6 +32,25 @@ const taskSchema = new mongoose.Schema(
 			type: String,
 			enum: ['Pending', 'In Progress', 'Completed'],
 			default: 'Pending',
+		},
+		repeat: {
+			type: String,
+			enum: ['none', 'daily', 'weekdays', 'weekly', 'monthly', 'custom'],
+			default: 'none',
+		},
+		repeatRule: {
+			type: String, // optional RRULE string if repeat==='custom'
+		},
+		repeatUntil: {
+			type: Date, // optional end date for recurrence
+		},
+		repeatCount: {
+			type: Number, // optional max occurrences
+			min: 1,
+		},
+		timezone: {
+			type: String,
+			default: 'UTC',
 		},
 		labels: {
 			type: [String],
@@ -89,6 +113,30 @@ const taskSchema = new mongoose.Schema(
 	}
 );
 
+// Derive dueDate from quickDue when not provided
+taskSchema.pre('validate', function (next) {
+	try {
+		if (!this.dueDate) {
+			const now = new Date();
+			if (this.quickDue === 'today') {
+				// set to today 17:00 local time by default
+				const d = new Date();
+				d.setHours(17, 0, 0, 0);
+				this.dueDate = d;
+			} else if (this.quickDue === 'tomorrow') {
+				const d = new Date();
+				d.setDate(d.getDate() + 1);
+				d.setHours(17, 0, 0, 0);
+				this.dueDate = d;
+			}
+			// if quickDue==='date' expect client to supply dueDate explicitly
+		}
+	} catch (_) {
+		// ignore derivation errors; validation will catch bad dates
+	}
+	return next();
+});
+
 // Create task slug from task name
 taskSchema.pre('save', function (next) {
 	this.slug = slugify(this.task, { lower: true });
@@ -130,6 +178,8 @@ taskSchema.index({ user: 1, status: 1 }); // Filter by status
 taskSchema.index({ user: 1, priority: 1 }); // Filter/sort by priority
 taskSchema.index({ labels: 1 }); // Filter by labels (array field)
 taskSchema.index({ task: 'text', description: 'text' }); // Full-text search
+taskSchema.index({ user: 1, dueDate: 1, status: 1 });
+taskSchema.index({ user: 1, repeat: 1 });
 
 const Tasks = mongoose.model('Tasks', taskSchema, 'Tasks');
 
