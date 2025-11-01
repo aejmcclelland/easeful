@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function Navbar() {
 	const { user, logout } = useAuth();
 	const nav = useNavigate();
+	
 	return (
 		<div className='navbar bg-base-100'>
 			<div className='flex-1'>
@@ -18,6 +19,9 @@ export default function Navbar() {
 						<span className='hidden sm:inline opacity-70'>
 							Hi, {user.name.split(' ')[0]}
 						</span>
+						<Link className='btn btn-ghost' to='/tasks'>
+							Tasks
+						</Link>
 						<Link className='btn btn-ghost' to='/profile'>
 							Profile
 						</Link>

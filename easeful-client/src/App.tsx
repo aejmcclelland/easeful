@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
+import Tasks from './pages/Tasks';
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import { useAuth } from './context/AuthContext';
@@ -21,6 +22,7 @@ export default function App() {
 				<Routes>
 					<Route path='/' element={<Home />} />
 					<Route path='/login' element={<Login />} />
+					<Route path='/tasks' element={<Tasks />} />
 					<Route path='/profile' element={<Profile />} />
 					<Route path='*' element={<Navigate to='/' replace />} />
 					<Route path='/register' element={<Register />} />

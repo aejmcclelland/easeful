@@ -19,8 +19,10 @@ export default function Profile() {
 
 	return (
 		<div className='card bg-base-100 shadow p-6 max-w-2xl mx-auto'>
-			<h1 className='text-2xl font-semibold mb-4 justify-center'>Profile</h1>
-			<div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+			<h1 className='text-3xl text-primary font-bold mb-4 text-center'>
+				Profile
+			</h1>
+			<div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
 				<div className='lg:col-span-1'>
 					<AvatarUploader currentUrl={user.avatar?.url} />
 				</div>

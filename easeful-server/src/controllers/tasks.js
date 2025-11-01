@@ -2,21 +2,32 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const slugify = require('slugify');
 const Tasks = require('../models/Tasks');
-const { storage } = require('../cloudinary/index');
+
+const multer = require('multer');
+const { storage, cloudinary } = require('../cloudinary');
+const upload = multer({
+	storage,
+	limits: { fileSize: 1_048_576 }, // 1MB per image; adjust if desired
+});
+// NOTE: CloudinaryStorage.allowed_formats controls types server-side (jpeg/jpg/png/pdf).
+// Multer `limits.fileSize` caps each file at 1MB. Adjust as needed.
+
+// Expose multer middlewares for routes
+exports.uploadTaskImages = upload.array('images', 5); // up to 5 images in one request
+exports.uploadTaskImageSingle = upload.single('image'); // handy if you add a single-image endpoint
 
 // Helper: ensure the current user owns the task or is admin
-function ensureOwnerOrAdmin(task, req, next, action = 'perform this action') {
+function ensureOwnerOrAdmin(task, req, action = 'perform this action') {
 	const isOwner =
 		task.user?.toString() === req.user._id?.toString?.() ||
 		task.user?.toString() === req.user.id;
 	if (!isOwner && req.user.role !== 'admin') {
-		return next(
-			new ErrorResponse(
-				`User ${req.user.id} is not authorised to ${action}`,
-				403
-			)
+		return new ErrorResponse(
+			`User ${req.user.id} is not authorised to ${action}`,
+			403
 		);
 	}
+	return null;
 }
 
 //@desc     Get all tasks
@@ -41,8 +52,8 @@ exports.getTask = asyncHandler(async (req, res, next) => {
 	}
 
 	// Make sure user is task owner (unless they're admin)
-	const maybeError = ensureOwnerOrAdmin(task, req, next, 'view this task');
-	if (maybeError) return; // ensureOwnerOrAdmin already called next()
+	const maybeError = ensureOwnerOrAdmin(task, req, 'view this task');
+	if (maybeError) return next(maybeError);
 
 	res.status(200).json({ success: true, data: task });
 });
@@ -53,6 +64,11 @@ exports.createTask = asyncHandler(async (req, res, next) => {
 	try {
 		//Add user to req.body
 		req.body.user = req.user.id;
+
+		// Enforce max 5 images on create
+		if (req.files && req.files.length > 5) {
+			return next(new ErrorResponse('You can attach at most 5 images to a task', 400));
+		}
 
 		// Process uploaded images from Cloudinary
 		const images = [];
@@ -93,12 +109,12 @@ exports.taskPhotoUpload = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
-	if (maybeError) return;
+	const maybeError = ensureOwnerOrAdmin(task, req, 'update this task');
+	if (maybeError) return next(maybeError);
 
 	// Check current image count
 	const currentCount = task.images ? task.images.length : 0;
-	const maxImages = 6;
+	const maxImages = 5;
 
 	if (currentCount >= maxImages) {
 		return next(
@@ -168,8 +184,8 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
-	if (maybeError) return;
+	const maybeError = ensureOwnerOrAdmin(task, req, 'update this task');
+	if (maybeError) return next(maybeError);
 
 	const { public_id } = req.params;
 	const decodedPublicId = decodeURIComponent(public_id);
@@ -185,7 +201,6 @@ exports.deleteTaskImage = asyncHandler(async (req, res, next) => {
 
 	try {
 		// Delete from Cloudinary
-		const cloudinary = require('cloudinary').v2;
 		await cloudinary.uploader.destroy(decodedPublicId);
 
 		// Remove from task
@@ -213,8 +228,8 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 			new ErrorResponse(`Task not found with id of ${req.params.id}`, 404)
 		);
 	}
-	const maybeError = ensureOwnerOrAdmin(task, req, next, 'update this task');
-	if (maybeError) return;
+	const maybeError = ensureOwnerOrAdmin(task, req, 'update this task');
+	if (maybeError) return next(maybeError);
 
 	//update slug when updating name
 	if (Object.keys(req.body).includes('name')) {
@@ -241,10 +256,10 @@ exports.deleteTask = asyncHandler(async (req, res, next) => {
 		);
 	}
 
-	const maybeError = ensureOwnerOrAdmin(task, req, next, 'delete this task');
-	if (maybeError) return;
+	const maybeError = ensureOwnerOrAdmin(task, req, 'delete this task');
+	if (maybeError) return next(maybeError);
 
-	task.deleteOne();
+	await task.deleteOne();
 
 	res.status(200).json({ success: true, data: {} });
 });
