@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function Navbar() {
 	const { user, logout } = useAuth();
 	const nav = useNavigate();
-	
+
 	return (
 		<div className='navbar bg-base-100'>
 			<div className='flex-1'>
@@ -19,14 +19,14 @@ export default function Navbar() {
 						<span className='hidden sm:inline opacity-70'>
 							Hi, {user.name.split(' ')[0]}
 						</span>
-						<Link className='btn btn-ghost' to='/tasks'>
+						<Link className='btn btn-outline btn-info' to='/tasks'>
 							Tasks
 						</Link>
-						<Link className='btn btn-ghost' to='/profile'>
+						<Link className='btn btn-outline btn-info' to='/profile'>
 							Profile
 						</Link>
 						<button
-							className='btn btn-outline'
+							className='btn btn-outline btn-info'
 							onClick={async () => {
 								await logout();
 								nav('/', { replace: true });
@@ -36,10 +36,10 @@ export default function Navbar() {
 					</>
 				) : (
 					<>
-						<Link className='btn btn-ghost' to='/register'>
+						<Link className='btn btn-outline btn-info' to='/register'>
 							Register
 						</Link>
-						<Link className='btn btn-primary' to='/login'>
+						<Link className='btn btn-outline btn-info' to='/login'>
 							Login
 						</Link>
 					</>
