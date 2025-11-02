@@ -19,14 +19,14 @@ export default function Navbar() {
 						<span className='hidden sm:inline opacity-70'>
 							Hi, {user.name.split(' ')[0]}
 						</span>
-						<Link className='btn btn-outline btn-info' to='/tasks'>
+						<Link className='btn btn-soft btn-info' to='/tasks'>
 							Tasks
 						</Link>
-						<Link className='btn btn-outline btn-info' to='/profile'>
+						<Link className='btn btn-soft btn-info' to='/profile'>
 							Profile
 						</Link>
 						<button
-							className='btn btn-outline btn-info'
+							className='btn btn-soft btn-info'
 							onClick={async () => {
 								await logout();
 								nav('/', { replace: true });
@@ -36,10 +36,10 @@ export default function Navbar() {
 					</>
 				) : (
 					<>
-						<Link className='btn btn-outline btn-info' to='/register'>
+						<Link className='btn btn-soft btn-info' to='/register'>
 							Register
 						</Link>
-						<Link className='btn btn-outline btn-info' to='/login'>
+						<Link className='btn btn-soft btn-info' to='/login'>
 							Login
 						</Link>
 					</>
