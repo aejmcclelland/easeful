@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 type Props = {
   /** Existing avatar URL to show initially */
@@ -65,8 +65,8 @@ export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Pro
       });
       setSuccess(true);
       setFile(null);
-    } catch (e: any) {
-      setError(e?.message || 'Upload failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
       setUploading(false);
     }

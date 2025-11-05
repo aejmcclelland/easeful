@@ -16,8 +16,12 @@ export default function TaskList() {
 			setError('');
 			const data = await listTasks();
 			setTasks(data);
-		} catch (e: any) {
-			setError(e?.message || 'Failed to load tasks');
+		} catch (e: unknown) {
+			if (e instanceof Error) {
+				setError(e.message);
+			} else {
+				setError('Failed to load tasks');
+			}
 		} finally {
 			setLoading(false);
 		}
