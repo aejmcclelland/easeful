@@ -6,7 +6,7 @@ import Register from './pages/Register';
 import Tasks from './pages/Tasks';
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import LoadingScreen from './components/LoadingScreen';
 
 export default function App() {

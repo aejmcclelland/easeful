@@ -1,28 +1,10 @@
+'use client';
+
 // src/context/AuthContext.tsx
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-
-export type User = {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: { url?: string };
-};
-
-type AuthContextType = {
-  user: User | null;
-  loading: boolean;
-  refresh: () => Promise<void>;
-  logout: () => Promise<void>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import type { User } from './authTypes';
+import { AuthContext } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -62,12 +44,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used within <AuthProvider>');
-  }
-  return ctx;
 }
