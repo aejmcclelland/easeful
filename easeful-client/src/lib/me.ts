@@ -1,17 +1,27 @@
-// Vite: use import.meta.env.DEV instead of process.env.NODE_ENV
-const API_BASE = import.meta.env.DEV ? '/api/easeful' : '/api/tasks';
+
 
 export async function deleteMe() {
-	const response = await fetch(`${API_BASE}/auth/me`, {
-		method: 'DELETE',
-		credentials: 'include',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({}),
-	});
-	if (!response.ok) {
-		throw new Error('Failed to delete user account');
-	}
-	return await response.json();
+  const response = await fetch('/api/auth/me', {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ confirm: true }),
+  });
+
+  if (response.status === 204) {
+    // Successful delete, no content to return
+    return;
+  }
+
+  let message = 'Failed to delete user account';
+  try {
+    const data = await response.json();
+    if (data?.error) message = data.error;
+  } catch {
+    // ignore JSON parse errors, keep default message
+  }
+
+  throw new Error(message);
 }

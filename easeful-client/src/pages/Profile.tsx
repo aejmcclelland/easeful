@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AvatarUploader from '../components/AvatarUploader';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
 
 export default function Profile() {
 	const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ export default function Profile() {
 						<div className='label'>Email</div>
 						<div className='font-medium'>{user.email}</div>
 					</div>
+					<DeleteAccountSection />
 				</div>
 			</div>
 		</div>
