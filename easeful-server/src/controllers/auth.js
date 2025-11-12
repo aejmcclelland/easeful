@@ -3,6 +3,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const sendEmail = require('../utils/sendEmail');
 const User = require('../models/User');
+const Task = require('../models/Tasks');
 const { cloudinary } = require('../cloudinary');
 const { COOKIE_NAME, sessionCookieOptions, DAY } = require('../config/cookies');
 const fs = require('fs');
@@ -15,7 +16,6 @@ const cookieOptions = {
 	path: '/',
 	maxAge: 24 * 60 * 60 * 1000, // 1 day
 };
-
 
 async function sendSession(user, req, res, statusCode = 200) {
 	const days = Number(process.env.SESSION_COOKIE_EXPIRE || 1);
@@ -250,4 +250,72 @@ exports.updateAvatar = asyncHandler(async (req, res, next) => {
 	} catch (error) {
 		return next(new ErrorResponse('Problem with file upload', 500));
 	}
+});
+
+// @desc    Delete current logged-in user and their data
+// @route   DELETE /api/auth/me
+// @access  Private
+exports.deleteMe = asyncHandler(async (req, res, next) => {
+	const userId = req.user.id;
+
+	const user = await User.findById(userId);
+	if (!user) {
+		return next(new ErrorResponse('User not found', 404));
+	}
+
+	// Optional safety: require explicit confirm from body
+	if (!req.body || req.body.confirm !== true) {
+		return next(new ErrorResponse('Confirmation required', 400));
+	}
+
+	// 1) Delete all tasks and their images for this user
+	const tasks = await Task.find({ user: userId }).select('images');
+
+	for (const task of tasks) {
+		// If you store images as array [{ public_id, url }, ...]
+		if (Array.isArray(task.images)) {
+			for (const img of task.images) {
+				if (img && img.public_id) {
+					try {
+						await cloudinary.uploader.destroy(img.public_id);
+					} catch (_) {
+						// best-effort; don't block the whole deletion
+					}
+				}
+			}
+		}
+	}
+
+	await Task.deleteMany({ user: userId });
+
+	//  Delete user avatar from Cloudinary if present
+	if (user.avatar && user.avatar.public_id) {
+		try {
+			await cloudinary.uploader.destroy(user.avatar.public_id);
+		} catch (_) {}
+	}
+
+	//  Delete the user
+	await user.deleteOne();
+
+	//  Destroy current session and clear cookie (same idea as logout)
+	try {
+		const sid = req.cookies?.[COOKIE_NAME];
+		const store = req.app.get('sessionStore');
+		if (sid && store && typeof store.destroy === 'function') {
+			await store.destroy(sid);
+		}
+	} catch (_) {
+		// ignore store errors
+	}
+
+	res.clearCookie(COOKIE_NAME, {
+		path: '/',
+		httpOnly: true,
+		secure: isProd,
+		sameSite: isProd ? 'none' : 'lax',
+	});
+
+	// 204 = successfully processed, no content
+	return res.status(204).send();
 });

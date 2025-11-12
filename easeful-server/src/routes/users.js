@@ -16,6 +16,7 @@ const router = express.Router({ mergeParams: true });
 const advancedResults = require('../middleware/advancedresults');
 const { protect, authorise } = require('../middleware/auth');
 
+
 // Public registration route
 router.post('/register', registerUser);
 
