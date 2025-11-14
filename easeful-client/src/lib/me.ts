@@ -1,5 +1,4 @@
 
-
 export async function deleteMe() {
   const response = await fetch('/api/auth/me', {
     method: 'DELETE',

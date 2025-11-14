@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteMe } from '../lib/me';
 import { useAuth } from '../hooks/useAuth';
+import { profileToasts } from '../lib/toast';
 import { getErrorMessage } from '../lib/getErrorMessage';
 
 export function DeleteAccountSection() {
@@ -22,12 +23,16 @@ export function DeleteAccountSection() {
 		setError(null);
 		try {
 			await deleteMe();
+			profileToasts.deleteAccountSuccess();
 			setUser(null); // clear client auth
 			navigate('/login?deleted=1', { replace: true });
 		} catch (err: unknown) {
-			setError(getErrorMessage(err));
-			setIsDeleting(false);
+			const message = getErrorMessage(err);
+
+			profileToasts.deleteAccountError(message);
+			setError(message);
 		}
+		setIsDeleting(false);
 	};
 
 	return (

@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { authToasts } from '../lib/toast';
+import { loginRequest } from '../lib/auth';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function Login() {
 	const [email, setEmail] = useState('');
@@ -12,19 +15,15 @@ export default function Login() {
 	const onSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			const res = await fetch('/api/auth/login', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email, password }),
-				credentials: 'include',
-			});
-			if (!res.ok) throw new Error('Login failed');
+			await loginRequest(email, password);
 			await refresh();
+			authToasts.loginSuccess();
 			navigate('/');
-		} catch {
-			alert('Login failed');
+		} catch (err: unknown) {
+			authToasts.loginError(getErrorMessage(err));
 		}
 	};
+
 	return (
 		<div className='flex justify-center items-center min-h-screen'>
 			<div className='card w-96 bg-base-100 shadow-sm'>
