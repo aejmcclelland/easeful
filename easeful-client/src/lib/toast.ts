@@ -14,6 +14,14 @@ export const TOAST_IDS = {
 	loginSuccess: 'login-success',
 	registerSuccess: 'auth-register-success',
 	registerError: 'register-error',
+
+	//task-related IDs can be added here
+	createTaskSuccess: 'create-task-success',
+	createTaskError: 'create-task-error',
+	updateTaskSuccess: 'update-task-success',
+	updateTaskError: 'update-task-error',
+	deleteTaskSuccess: 'delete-task-success',
+	deleteTaskError: 'delete-task-error',
 } as const;
 
 export type ToastIdKey = keyof typeof TOAST_IDS;
@@ -87,16 +95,54 @@ export const authToasts = {
 			toastId: TOAST_IDS.loginError,
 		});
 	},
-    registerSuccess() {
-        toast.success('Registered successfully', {
-            ...defaultOpts,
-            toastId: TOAST_IDS.registerSuccess,
-        });
-    },
-    registerError(message: string) {
-        toast.error(message || 'Registration failed', {
-            ...defaultOpts,
-            toastId: TOAST_IDS.registerError,
-        });
-    }
+	registerSuccess() {
+		toast.success('Registered successfully', {
+			...defaultOpts,
+			toastId: TOAST_IDS.registerSuccess,
+		});
+	},
+	registerError(message: string) {
+		toast.error(message || 'Registration failed', {
+			...defaultOpts,
+			toastId: TOAST_IDS.registerError,
+		});
+	},
+};
+export const taskToasts = {
+	createSuccess() {
+		toast.success('Task created successfully', {
+			...defaultOpts,
+			toastId: TOAST_IDS.createTaskSuccess,
+		});
+	},
+	createError(message: string) {
+		toast.error(message || 'Failed to create task', {
+			...defaultOpts,
+			toastId: TOAST_IDS.createTaskError,
+		});
+	},
+	updateSuccess() {
+		toast.success('Task updated successfully', {
+			...defaultOpts,
+			toastId: TOAST_IDS.updateTaskSuccess,
+		});
+	},
+	updateError(message: string) {
+		toast.error(message || 'Failed to update task', {
+			...defaultOpts,
+			toastId: TOAST_IDS.updateTaskError,
+		});
+	},
+	deleteSuccess() {
+		toast.success('Task deleted successfully', {
+			...defaultOpts,
+			toastId: TOAST_IDS.deleteTaskSuccess,
+		});
+	},
+	deleteError(message: string) {
+		toast.error(message || 'Failed to delete task', {
+			...defaultOpts,
+			toastId: TOAST_IDS.deleteTaskError,
+		});
+	},
 };

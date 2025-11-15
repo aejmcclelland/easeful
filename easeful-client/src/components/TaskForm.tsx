@@ -1,182 +1,203 @@
-
-
 import { useState } from 'react';
 import type { Task } from '../types/task';
 import { createTask } from '../lib/tasks';
 import { useNavigate } from 'react-router-dom';
+import { getErrorMessage } from '../lib/getErrorMessage';
+import { taskToasts } from '../lib/toast';
+
+const initialForm: Task = {
+	task: '',
+	description: '',
+	priority: 'Medium',
+	quickDue: 'none',
+	repeat: 'none',
+	timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+	// dueDate, repeatCount etc if your Task type has them:
+	// dueDate: undefined,
+	// repeatCount: 1,
+};
 
 export default function TaskForm() {
-  const [form, setForm] = useState<Task>({
-    task: '',
-    description: '',
-    priority: 'Medium',
-    quickDue: 'none',
-    repeat: 'none',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const nav = useNavigate();
+	const [form, setForm] = useState<Task>(initialForm);
+	const [submitting, setSubmitting] = useState(false);
+	const navigate = useNavigate();
 
-  const showDateInput = form.quickDue === 'date';
+	const showDateInput = form.quickDue === 'date';
 
-  function update<K extends keyof Task>(key: K, value: Task[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
+	function update<K extends keyof Task>(key: K, value: Task[K]) {
+		setForm((prev) => ({ ...prev, [key]: value }));
+	}
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    if (!form.task.trim()) {
-      setError('Task title is required');
-      return;
-    }
-    if (form.quickDue === 'date' && !form.dueDate) {
-      setError('Please choose a due date');
-      return;
-    }
-    try {
-      setSubmitting(true);
-      const payload: Task = {
-        ...form,
-        task: form.task.trim(),
-        description: form.description?.trim() || '',
-      };
-      await createTask(payload);
-      nav('/tasks');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create task');
-    } finally {
-      setSubmitting(false);
-    }
-  }
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setSubmitting(true);
 
-  return (
-    <form onSubmit={onSubmit} className="card bg-base-100 shadow p-6 space-y-4">
-      <h2 className="card-title">Create Task</h2>
+		try {
+			await createTask(form);
 
-      <div className="form-control">
-        <label className="label"><span className="label-text">Title</span></label>
-        <input
-          className="input input-bordered"
-          placeholder="e.g., Book MOT"
-          value={form.task}
-          onChange={(e) => update('task', e.target.value)}
-          maxLength={150}
-          required
-        />
-      </div>
+			taskToasts.createSuccess();
 
-      <div className="form-control">
-        <label className="label"><span className="label-text">Description</span></label>
-        <textarea
-          className="textarea textarea-bordered"
-          placeholder="Details…"
-          value={form.description}
-          onChange={(e) => update('description', e.target.value)}
-          rows={3}
-        />
-      </div>
+			// reset form so user can add another task easily
+			setForm(initialForm);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-control">
-          <label className="label"><span className="label-text">Priority</span></label>
-          <select
-            className="select select-bordered"
-            value={form.priority}
-            onChange={(e) => update('priority', e.target.value as Task['priority'])}
-          >
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-          </select>
-        </div>
+			navigate('/tasks');
+		} catch (err) {
+			const message = getErrorMessage(err);
+			taskToasts.createError(message || 'Failed to create task');
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
-        <div className="form-control">
-          <label className="label"><span className="label-text">Quick due</span></label>
-          <select
-            className="select select-bordered"
-            value={form.quickDue}
-            onChange={(e) => update('quickDue', e.target.value as Task['quickDue'])}
-          >
-            <option value="none">None</option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="date">Pick date…</option>
-          </select>
-        </div>
-      </div>
+	return (
+		<form
+			onSubmit={handleSubmit}
+			className='card bg-base-100 shadow p-6 space-y-4'>
+			<h2 className='card-title'>Create Task</h2>
 
-      {showDateInput && (
-        <div className="form-control">
-          <label className="label"><span className="label-text">Due date</span></label>
-          <input
-            type="datetime-local"
-            className="input input-bordered"
-            value={form.dueDate || ''}
-            onChange={(e) => update('dueDate', e.target.value)}
-          />
-        </div>
-      )}
+			<div className='form-control'>
+				<label className='label'>
+					<span className='label-text'>Title</span>
+				</label>
+				<input
+					className='input input-bordered'
+					placeholder='e.g., Book MOT'
+					value={form.task}
+					onChange={(e) => update('task', e.target.value)}
+					maxLength={150}
+					required
+				/>
+			</div>
 
-      <div className="form-control">
-        <label className="label"><span className="label-text">Repeat</span></label>
-        <select
-          className="select select-bordered"
-          value={form.repeat}
-          onChange={(e) => update('repeat', e.target.value as Task['repeat'])}
-        >
-          <option value="none">No repeat</option>
-          <option value="daily">Daily</option>
-          <option value="weekdays">Weekdays (Mon–Fri)</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="custom">Custom (RRULE)</option>
-        </select>
-      </div>
+			<div className='form-control'>
+				<label className='label'>
+					<span className='label-text'>Description</span>
+				</label>
+				<textarea
+					className='textarea textarea-bordered'
+					placeholder='Details…'
+					value={form.description}
+					onChange={(e) => update('description', e.target.value)}
+					rows={3}
+				/>
+			</div>
 
-      {form.repeat === 'custom' && (
-        <div className="form-control">
-          <label className="label"><span className="label-text">Custom RRULE</span></label>
-          <input
-            className="input input-bordered"
-            placeholder="e.g., FREQ=WEEKLY;BYDAY=MO,WE,FR"
-            value={form.repeatRule || ''}
-            onChange={(e) => update('repeatRule', e.target.value)}
-          />
-        </div>
-      )}
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Priority</span>
+					</label>
+					<select
+						className='select select-bordered'
+						value={form.priority}
+						onChange={(e) =>
+							update('priority', e.target.value as Task['priority'])
+						}>
+						<option>Low</option>
+						<option>Medium</option>
+						<option>High</option>
+					</select>
+				</div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-control">
-          <label className="label"><span className="label-text">Repeat until (optional)</span></label>
-          <input
-            type="date"
-            className="input input-bordered"
-            value={form.repeatUntil || ''}
-            onChange={(e) => update('repeatUntil', e.target.value)}
-          />
-        </div>
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Quick due</span>
+					</label>
+					<select
+						className='select select-bordered'
+						value={form.quickDue}
+						onChange={(e) =>
+							update('quickDue', e.target.value as Task['quickDue'])
+						}>
+						<option value='none'>None</option>
+						<option value='today'>Today</option>
+						<option value='tomorrow'>Tomorrow</option>
+						<option value='date'>Pick date…</option>
+					</select>
+				</div>
+			</div>
 
-        <div className="form-control">
-          <label className="label"><span className="label-text">Repeat count (optional)</span></label>
-          <input
-            type="number"
-            min={1}
-            className="input input-bordered"
-            value={form.repeatCount || ''}
-            onChange={(e) => update('repeatCount', Number(e.target.value))}
-          />
-        </div>
-      </div>
+			{showDateInput && (
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Due date</span>
+					</label>
+					<input
+						type='datetime-local'
+						className='input input-bordered'
+						value={form.dueDate || ''}
+						onChange={(e) => update('dueDate', e.target.value)}
+					/>
+				</div>
+			)}
 
-      {error && <p className="text-error">{error}</p>}
+			<div className='form-control'>
+				<label className='label'>
+					<span className='label-text'>Repeat</span>
+				</label>
+				<select
+					className='select select-bordered'
+					value={form.repeat}
+					onChange={(e) => update('repeat', e.target.value as Task['repeat'])}>
+					<option value='none'>No repeat</option>
+					<option value='daily'>Daily</option>
+					<option value='weekdays'>Weekdays (Mon–Fri)</option>
+					<option value='weekly'>Weekly</option>
+					<option value='monthly'>Monthly</option>
+					<option value='custom'>Custom (RRULE)</option>
+				</select>
+			</div>
 
-      <div className="card-actions justify-end">
-        <button className="btn btn-primary" disabled={submitting}>
-          {submitting ? <span className="loading loading-spinner loading-sm" /> : 'Create task'}
-        </button>
-      </div>
-    </form>
-  );
+			{form.repeat === 'custom' && (
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Custom RRULE</span>
+					</label>
+					<input
+						className='input input-bordered'
+						placeholder='e.g., FREQ=WEEKLY;BYDAY=MO,WE,FR'
+						value={form.repeatRule || ''}
+						onChange={(e) => update('repeatRule', e.target.value)}
+					/>
+				</div>
+			)}
+
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Repeat until (optional)</span>
+					</label>
+					<input
+						type='date'
+						className='input input-bordered'
+						value={form.repeatUntil || ''}
+						onChange={(e) => update('repeatUntil', e.target.value)}
+					/>
+				</div>
+
+				<div className='form-control'>
+					<label className='label'>
+						<span className='label-text'>Repeat count (optional)</span>
+					</label>
+					<input
+						type='number'
+						min={1}
+						className='input input-bordered'
+						value={form.repeatCount || ''}
+						onChange={(e) => update('repeatCount', Number(e.target.value))}
+					/>
+				</div>
+			</div>
+
+			<div className='card-actions justify-end'>
+				<button className='btn btn-primary' disabled={submitting}>
+					{submitting ? (
+						<span className='loading loading-spinner loading-sm' />
+					) : (
+						'Create task'
+					)}
+				</button>
+			</div>
+		</form>
+	);
 }

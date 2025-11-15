@@ -2,6 +2,8 @@
 import type { Task } from '../types/task';
 import { deleteTask } from '../lib/tasks';
 import { useState } from 'react';
+import { getErrorMessage } from '../lib/getErrorMessage';
+import { taskToasts } from '../lib/toast';
 
 type TaskCardProps = {
 	task: Task;
@@ -16,7 +18,11 @@ export default function TaskCard({ task, onDeleted }: TaskCardProps) {
 		try {
 			setDeleting(true);
 			await deleteTask(task._id!);
+			taskToasts.deleteSuccess();
 			onDeleted?.(task._id!);
+		} catch (err) {
+			const message = getErrorMessage(err);
+			taskToasts.deleteError(message || 'Failed to delete task');
 		} finally {
 			setDeleting(false);
 		}

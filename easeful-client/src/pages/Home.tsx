@@ -12,7 +12,7 @@ export default function Home() {
 			</p>
 
 			<div className='flex justify-center gap-4'>
-				<a href='/login' className='btn btn-primary'>
+				<a href='/tasks' className='btn btn-primary'>
 					Get Started
 				</a>
 				<a href='/profile' className='btn btn-outline'>
