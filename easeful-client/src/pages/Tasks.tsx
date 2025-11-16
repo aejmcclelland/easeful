@@ -1,7 +1,6 @@
 // src/pages/Tasks.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
 import TaskForm from '../components/TaskForm';
 import TaskList from '../components/TaskList';
 import type { Task } from '../types/task';
@@ -16,6 +15,8 @@ export default function Tasks() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [tasksLoading, setTasksLoading] = useState(true);
 	const [tasksError, setTasksError] = useState<string | null>(null);
+
+	const [showForm, setShowForm] = useState(false);
 
 	// Load tasks from API
 	useEffect(() => {
@@ -71,7 +72,20 @@ export default function Tasks() {
 				</p>
 			</div>
 
-			<TaskForm onTaskCreated={handleTaskCreated} />
+			{showForm && (
+				<TaskForm
+					onTaskCreated={(newTask) => {
+						handleTaskCreated(newTask);
+						setShowForm(false);
+					}}
+				/>
+			)}
+
+			{!showForm && (
+				<button className='btn btn-primary' onClick={() => setShowForm(true)}>
+					+ Add task
+				</button>
+			)}
 
 			<div className='divider'>Your Tasks</div>
 

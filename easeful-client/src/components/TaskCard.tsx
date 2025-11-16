@@ -4,6 +4,7 @@ import { deleteTask } from '../lib/tasks';
 import { useState } from 'react';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
+import PriorityBadge from './PriorityBadge';
 
 type TaskCardProps = {
 	task: Task;
@@ -32,9 +33,9 @@ export default function TaskCard({ task, onDeleted }: TaskCardProps) {
 		<div className='card bg-base-100 shadow-md border'>
 			<div className='card-body'>
 				<h2 className='card-title'>{task.task}</h2>
+				<PriorityBadge priority={task.priority} />
 				<p className='text-sm text-base-content/70'>{task.description}</p>
 				<div className='flex justify-between items-center mt-2'>
-					<span className='badge badge-outline'>{task.priority}</span>
 					<span className='text-xs opacity-70'>
 						{task.dueDate
 							? new Date(task.dueDate).toLocaleString()
