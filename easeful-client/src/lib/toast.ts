@@ -9,6 +9,9 @@ export const TOAST_IDS = {
 	deleteAccountSuccess: 'delete-account-success',
 	deleteAccountError: 'delete-account-error',
 
+	updateAvatarSuccess: 'update-avatar-success',
+	updateAvatarError: 'update-avatar-error',
+
 	//auth-related IDs
 	loginError: 'auth-login-error',
 	loginSuccess: 'login-success',

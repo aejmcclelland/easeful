@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { toastSuccess, toastError } from '../lib/toast';
 import { useAuth } from '../hooks/useAuth';
 
 type Props = {
@@ -11,9 +12,7 @@ type Props = {
 export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Props) {
   const { setUser } = useAuth();
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string>('');
   const [uploading, setUploading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const preview = useMemo(() => {
@@ -26,17 +25,15 @@ export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Pro
   }
 
   async function handlePickedFile(f: File | null) {
-    setError('');
-    setSuccess(false);
     setFile(null);
     if (!f) return;
     if (!f.type.startsWith('image/')) {
-      setError('Please choose an image file');
+      toastError('Please choose an image file');
       return;
     }
     if (f.size > maxBytes) {
       const mb = (maxBytes / (1024 * 1024)).toFixed(1);
-      setError(`Image too large. Max ${mb} MB`);
+      toastError(`Image too large. Max ${mb} MB`);
       return;
     }
     setFile(f);
@@ -63,10 +60,10 @@ export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Pro
         if (!prev) return prev;
         return { ...prev, avatar: json.data?.avatar ?? prev.avatar };
       });
-      setSuccess(true);
+      toastSuccess('Avatar updated', 'updateAvatarSuccess');
       setFile(null);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Upload failed');
+      toastError(e instanceof Error ? e.message : 'Upload failed', 'updateAvatarError');
     } finally {
       setUploading(false);
     }
@@ -108,7 +105,7 @@ export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Pro
           className="hidden"
           onChange={(e) => handlePickedFile(e.target.files?.[0] || null)}
         />
-
+  
         {/* spinner overlay while uploading */}
         {uploading && (
           <div className="absolute inset-0 grid place-items-center">
@@ -117,8 +114,7 @@ export default function AvatarUploader({ currentUrl, maxBytes = 1_048_576 }: Pro
         )}
       </div>
 
-      {error && <p className="text-error text-xs">{error}</p>}
-      {success && <p className="text-success text-xs">Avatar updated</p>}
+      {/* No inline error/success messages; handled by toast */}
     </div>
   );
 }

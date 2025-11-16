@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import type { Task } from '../types/task';
 import { createTask } from '../lib/tasks';
-import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
+
+type TaskFormProps = {
+	onTaskCreated?: (task: Task) => void;
+};
 
 const initialForm: Task = {
 	task: '',
@@ -17,10 +20,9 @@ const initialForm: Task = {
 	// repeatCount: 1,
 };
 
-export default function TaskForm() {
+export default function TaskForm({ onTaskCreated }: TaskFormProps) {
 	const [form, setForm] = useState<Task>(initialForm);
 	const [submitting, setSubmitting] = useState(false);
-	const navigate = useNavigate();
 
 	const showDateInput = form.quickDue === 'date';
 
@@ -33,14 +35,15 @@ export default function TaskForm() {
 		setSubmitting(true);
 
 		try {
-			await createTask(form);
+			const created = await createTask(form);
 
 			toastSuccess('Task created successfully', 'createTaskSuccess');
 
-			// reset form so user can add another task easily
-			setForm(initialForm);
+			setForm(initialForm); // reset form
 
-			navigate('/tasks');
+			if (onTaskCreated) {
+				onTaskCreated(created);
+			}
 		} catch (err) {
 			const message = getErrorMessage(err);
 			toastError(message || 'Failed to create task', 'createTaskError');

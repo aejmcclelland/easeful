@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteMe } from '../lib/me';
 import { useAuth } from '../hooks/useAuth';
-import { profileToasts } from '../lib/toast';
+import { toastSuccess, toastError } from '../lib/toast';
 import { getErrorMessage } from '../lib/getErrorMessage';
 
 export function DeleteAccountSection() {
@@ -13,26 +13,23 @@ export function DeleteAccountSection() {
 	const [confirmText, setConfirmText] = useState('');
 	const [ack, setAck] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
 	const canDelete = ack && confirmText === 'DELETE' && !isDeleting;
 
 	const handleDelete = async () => {
 		if (!canDelete) return;
 		setIsDeleting(true);
-		setError(null);
 		try {
 			await deleteMe();
-			profileToasts.deleteAccountSuccess();
+			toastSuccess('Account deleted successfully', 'deleteAccountSuccess');
 			setUser(null); // clear client auth
 			navigate('/login?deleted=1', { replace: true });
 		} catch (err: unknown) {
-			const message = getErrorMessage(err);
-
-			profileToasts.deleteAccountError(message);
-			setError(message);
+			const message = getErrorMessage(err) || 'Failed to delete account';
+			toastError(message, 'deleteAccountError');
+		} finally {
+			setIsDeleting(false);
 		}
-		setIsDeleting(false);
 	};
 
 	return (
@@ -69,7 +66,6 @@ export function DeleteAccountSection() {
 				/>
 			</div>
 
-			{error && <p className='text-sm text-red-500'>{error}</p>}
 
 			<button
 				onClick={handleDelete}
