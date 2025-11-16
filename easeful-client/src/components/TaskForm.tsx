@@ -3,7 +3,7 @@ import type { Task } from '../types/task';
 import { createTask } from '../lib/tasks';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../lib/getErrorMessage';
-import { taskToasts } from '../lib/toast';
+import { toastSuccess, toastError } from '../lib/toast';
 
 const initialForm: Task = {
 	task: '',
@@ -35,7 +35,7 @@ export default function TaskForm() {
 		try {
 			await createTask(form);
 
-			taskToasts.createSuccess();
+			toastSuccess('Task created successfully', 'createTaskSuccess');
 
 			// reset form so user can add another task easily
 			setForm(initialForm);
@@ -43,7 +43,7 @@ export default function TaskForm() {
 			navigate('/tasks');
 		} catch (err) {
 			const message = getErrorMessage(err);
-			taskToasts.createError(message || 'Failed to create task');
+			toastError(message || 'Failed to create task', 'createTaskError');
 		} finally {
 			setSubmitting(false);
 		}

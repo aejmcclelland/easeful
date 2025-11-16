@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { authToasts } from '../lib/toast';
+import { toastSuccess, toastError } from '../lib/toast';
 import { loginRequest } from '../lib/auth';
 import { getErrorMessage } from '../lib/getErrorMessage';
 
@@ -17,10 +17,10 @@ export default function Login() {
 		try {
 			await loginRequest(email, password);
 			await refresh();
-			authToasts.loginSuccess();
+			toastSuccess('Logged in successfully', 'loginSuccess');
 			navigate('/');
 		} catch (err: unknown) {
-			authToasts.loginError(getErrorMessage(err));
+			toastError(getErrorMessage(err) || 'Login failed', 'loginError');
 		}
 	};
 

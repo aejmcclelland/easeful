@@ -3,7 +3,7 @@ import type { Task } from '../types/task';
 import { deleteTask } from '../lib/tasks';
 import { useState } from 'react';
 import { getErrorMessage } from '../lib/getErrorMessage';
-import { taskToasts } from '../lib/toast';
+import { toastSuccess, toastError } from '../lib/toast';
 
 type TaskCardProps = {
 	task: Task;
@@ -18,11 +18,11 @@ export default function TaskCard({ task, onDeleted }: TaskCardProps) {
 		try {
 			setDeleting(true);
 			await deleteTask(task._id!);
-			taskToasts.deleteSuccess();
+			toastSuccess('Task deleted successfully', 'deleteTaskSuccess');
 			onDeleted?.(task._id!);
 		} catch (err) {
 			const message = getErrorMessage(err);
-			taskToasts.deleteError(message || 'Failed to delete task');
+			toastError(message || 'Failed to delete task', 'deleteTaskError');
 		} finally {
 			setDeleting(false);
 		}
@@ -36,7 +36,9 @@ export default function TaskCard({ task, onDeleted }: TaskCardProps) {
 				<div className='flex justify-between items-center mt-2'>
 					<span className='badge badge-outline'>{task.priority}</span>
 					<span className='text-xs opacity-70'>
-						{new Date(task.dueDate || '').toLocaleString()}
+						{task.dueDate
+							? new Date(task.dueDate).toLocaleString()
+							: 'No due date'}
 					</span>
 				</div>
 				<div className='card-actions justify-end mt-3'>

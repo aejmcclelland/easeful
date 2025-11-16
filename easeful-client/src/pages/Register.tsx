@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerRequest } from '../lib/auth';
-import { authToasts } from '../lib/toast';
+import { toastSuccess, toastError } from '../lib/toast';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { useAuth } from '../hooks/useAuth';
 
@@ -11,17 +11,15 @@ export default function Register() {
 	const nav = useNavigate();
 	const { refresh } = useAuth();
 	const [submitting, setSubmitting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
 	const onSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError(null);
 		setSubmitting(true);
 
 		try {
 			await registerRequest(form.name, form.email, form.password);
 			await refresh(); // from useAuth
-			authToasts.registerSuccess(); // toast: “Registered successfully”
+			toastSuccess('Registered successfully', 'registerSuccess');
 			nav('/'); // or to /tasks
 		} catch (err: unknown) {
 			let message = getErrorMessage(err) || 'Registration failed';
@@ -30,8 +28,7 @@ export default function Register() {
 				message =
 					'An account with that email already exists. Try signing in instead.';
 			}
-			setError(message);
-			authToasts.registerError(message);
+			toastError(message, 'registerError');
 		} finally {
 			setSubmitting(false);
 		}
@@ -76,8 +73,6 @@ export default function Register() {
 								onChange={(e) => setForm({ ...form, password: e.target.value })}
 								required
 							/>
-
-							{error && <p className='text-error text-sm mt-2'>{error}</p>}
 
 							<button
 								type='submit'
