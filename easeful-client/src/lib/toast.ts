@@ -31,7 +31,7 @@ export function showToast(
 	message: string,
 	type: 'success' | 'error' | 'info'
 ) {
-	toast[type](message, { toastId: id });
+	toast[type](message, { ...defaultOpts, toastId: TOAST_IDS[id] });
 }
 
 const defaultOpts: ToastOptions = {
@@ -146,3 +146,24 @@ export const taskToasts = {
 		});
 	},
 };
+
+export function toastSuccess(message: string, id?: ToastIdKey) {
+	toast.success(message, {
+		...defaultOpts,
+		toastId: id ? TOAST_IDS[id] : undefined,
+	});
+}
+
+export function toastError(message: string, id?: ToastIdKey) {
+	toast.error(message, {
+		...defaultOpts,
+		toastId: id ? TOAST_IDS[id] : undefined,
+	});
+}
+
+export function toastInfo(message: string, id?: ToastIdKey) {
+	toast.info(message, {
+		...defaultOpts,
+		toastId: id ? TOAST_IDS[id] : undefined,
+	});
+}
