@@ -19,6 +19,8 @@ export const TOAST_IDS = {
 	registerError: 'register-error',
 
 	//task-related IDs can be added here
+	statusUpdated: 'status-updated',
+	statusError: 'status-error',
 	createTaskSuccess: 'create-task-success',
 	createTaskError: 'create-task-error',
 	updateTaskSuccess: 'update-task-success',

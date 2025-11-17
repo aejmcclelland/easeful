@@ -1,4 +1,5 @@
 import type { Task } from '../types/task';
+import { apiFetch } from './api';
 // Vite: use import.meta.env.DEV instead of process.env.NODE_ENV
 const API_BASE = import.meta.env.DEV ? '/api/easeful' : '/api/tasks';
 
@@ -66,3 +67,21 @@ export async function deleteTask(id: string) {
 		throw new Error(json?.error || 'Failed to delete task');
 	}
 }
+
+export const updateTaskStatus = async (
+	taskId: string,
+	status: 'Pending' | 'In Progress' | 'Completed'
+) => {
+	const res = await apiFetch(`/tasks/${taskId}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ status }),
+	});
+
+	const json = await res.json().catch(() => ({}));
+	if (!res.ok || !json?.success) {
+		throw new Error(json?.error || 'Failed to update status');
+	}
+
+	return json.data;
+};
