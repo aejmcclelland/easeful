@@ -34,7 +34,7 @@ export default function PriorityBadge({
   if (editable && onChange) {
     return (
       <select
-        className={`select select-xs select-bordered ${className}`}
+        className={`select select-xs select-bordered w-24 ${colour} ${className}`}
         value={priority}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value as Priority)}
