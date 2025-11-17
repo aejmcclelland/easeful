@@ -2,7 +2,6 @@
 import type { Task } from '../types/task';
 import { deleteTask, updateTask } from '../lib/tasks';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
 import PriorityBadge from './PriorityBadge';
@@ -11,12 +10,12 @@ type TaskCardProps = {
 	task: Task;
 	onDeleted?: (id: string) => void;
 	onUpdated?: (task: Task) => void;
+	onEdit?: (task: Task) => void;
 };
 
-export default function TaskCard({ task, onDeleted, onUpdated }: TaskCardProps) {
+export default function TaskCard({ task, onDeleted, onUpdated, onEdit }: TaskCardProps) {
 	const [deleting, setDeleting] = useState(false);
 	const [updatingPriority, setUpdatingPriority] = useState(false);
-	const navigate = useNavigate();
 
 	async function handleDelete() {
 		if (!confirm('Delete this task?')) return;
@@ -70,7 +69,7 @@ export default function TaskCard({ task, onDeleted, onUpdated }: TaskCardProps) 
 				<div className='card-actions justify-end mt-3 gap-2'>
 					<button
 						className='btn btn-outline btn-sm'
-						onClick={() => navigate(`/tasks/${task._id}/edit`)}
+						onClick={() => onEdit?.(task)}
 					>
 						Edit
 					</button>

@@ -6,11 +6,11 @@ type TaskListProps = {
 	tasks: Task[];
 	onTaskDeleted?: (id: string) => void;
 	onTaskUpdated?: (task: Task) => void;
-
+	onTaskEdit?: (task: Task) => void;
 };
 
 
-export default function TaskList({ tasks, onTaskDeleted, onTaskUpdated }: TaskListProps) {
+export default function TaskList({ tasks, onTaskDeleted, onTaskUpdated, onTaskEdit }: TaskListProps) {
 	function handleDeleted(id: string) {
 		if (onTaskDeleted) onTaskDeleted(id);
 	}
@@ -32,6 +32,7 @@ export default function TaskList({ tasks, onTaskDeleted, onTaskUpdated }: TaskLi
 					task={task}
 					onDeleted={handleDeleted}
 					onUpdated={onTaskUpdated}
+					onEdit={onTaskEdit}
 				/>
 			))}
 		</div>

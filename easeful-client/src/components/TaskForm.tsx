@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Task } from '../types/task';
-import { createTask } from '../lib/tasks';
+import { createTask, updateTask } from '../lib/tasks';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
 
 
 type TaskFormProps = {
 	onTaskCreated?: (task: Task) => void;
+	onTaskUpdated?: (task: Task) => void;
+	editingTask?: Task | null;
 };
 
 const initialForm: Task = {
@@ -21,9 +23,21 @@ const initialForm: Task = {
 	// repeatCount: 1,
 };
 
-export default function TaskForm({ onTaskCreated }: TaskFormProps) {
-	const [form, setForm] = useState<Task>(initialForm);
+export default function TaskForm({
+	onTaskCreated,
+	onTaskUpdated,
+	editingTask,
+}: TaskFormProps) {
+	const [form, setForm] = useState<Task>(editingTask ?? initialForm);
 	const [submitting, setSubmitting] = useState(false);
+
+	useEffect(() => {
+		if (editingTask) {
+			setForm(editingTask);
+		} else {
+			setForm(initialForm);
+		}
+	}, [editingTask]);
 
 	const showDateInput = form.quickDue === 'date';
 
@@ -36,18 +50,28 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
 		setSubmitting(true);
 
 		try {
-			const created = await createTask(form);
+			// If we have an editingTask with an id, update instead of create
+			if (editingTask && editingTask._id) {
+				const updated = await updateTask(editingTask._id, form);
+				toastSuccess('Task updated successfully', 'updateTaskSuccess');
 
-			toastSuccess('Task created successfully', 'createTaskSuccess');
+				if (onTaskUpdated) {
+					onTaskUpdated(updated);
+				}
+			} else {
+				const created = await createTask(form);
+				toastSuccess('Task created successfully', 'createTaskSuccess');
 
-			setForm(initialForm); // reset form
+				setForm(initialForm); // reset form
 
-			if (onTaskCreated) {
-				onTaskCreated(created);
+				if (onTaskCreated) {
+					onTaskCreated(created);
+				}
 			}
 		} catch (err) {
 			const message = getErrorMessage(err);
-			toastError(message || 'Failed to create task', 'createTaskError');
+			const fallback = editingTask ? 'Failed to update task' : 'Failed to create task';
+			toastError(message || fallback, editingTask ? 'updateTaskError' : 'createTaskError');
 		} finally {
 			setSubmitting(false);
 		}
@@ -57,7 +81,9 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
 		<form
 			onSubmit={handleSubmit}
 			className='card bg-base-100 shadow p-6 space-y-4'>
-			<h2 className='card-title'>Create Task</h2>
+			<h2 className='card-title'>
+				{editingTask ? 'Edit Task' : 'Create Task'}
+			</h2>
 
 			<div className='form-control'>
 				<label className='label'>
@@ -197,6 +223,8 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
 				<button className='btn btn-primary' disabled={submitting}>
 					{submitting ? (
 						<span className='loading loading-spinner loading-sm' />
+					) : editingTask ? (
+						'Save changes'
 					) : (
 						'Create task'
 					)}

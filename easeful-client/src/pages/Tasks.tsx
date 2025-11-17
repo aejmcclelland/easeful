@@ -17,6 +17,7 @@ export default function Tasks() {
 	const [tasksError, setTasksError] = useState<string | null>(null);
 
 	const [showForm, setShowForm] = useState(false);
+	const [editingTask, setEditingTask] = useState<Task | null>(null);
 
 	// Load tasks from API
 	useEffect(() => {
@@ -79,15 +80,26 @@ export default function Tasks() {
 
 			{showForm && (
 				<TaskForm
+					editingTask={editingTask}
 					onTaskCreated={(newTask) => {
 						handleTaskCreated(newTask);
+						setShowForm(false);
+					}}
+					onTaskUpdated={(updatedTask) => {
+						handleTaskUpdated(updatedTask);
+						setEditingTask(null);
 						setShowForm(false);
 					}}
 				/>
 			)}
 
 			{!showForm && (
-				<button className='btn btn-primary' onClick={() => setShowForm(true)}>
+				<button
+					className='btn btn-primary'
+					onClick={() => {
+						setEditingTask(null);
+						setShowForm(true);
+					}}>
 					+ Add task
 				</button>
 			)}
@@ -100,6 +112,10 @@ export default function Tasks() {
 					setTasks((prev) => prev.filter((t) => t._id !== id))
 				}
         onTaskUpdated={handleTaskUpdated}
+        onTaskEdit={(task) => {
+          setEditingTask(task);
+          setShowForm(true);
+        }}
 			/>
 		</div>
 	);
