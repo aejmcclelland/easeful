@@ -61,10 +61,9 @@ export default function Tasks() {
 		setTasks((prev) => [newTask, ...prev]);
 	}
 
-  function handleTaskUpdated(updated: Task) {
+	function handleTaskUpdated(updated: Task) {
 		setTasks((prev) => prev.map((t) => (t._id === updated._id ? updated : t)));
 	}
-
 
 	return (
 		<div className='max-w-4xl mx-auto p-6 space-y-8'>
@@ -90,6 +89,10 @@ export default function Tasks() {
 						setEditingTask(null);
 						setShowForm(false);
 					}}
+					onCancelEdit={() => {
+						setEditingTask(null);
+						setShowForm(false);
+					}}
 				/>
 			)}
 
@@ -111,11 +114,11 @@ export default function Tasks() {
 				onTaskDeleted={(id) =>
 					setTasks((prev) => prev.filter((t) => t._id !== id))
 				}
-        onTaskUpdated={handleTaskUpdated}
-        onTaskEdit={(task) => {
-          setEditingTask(task);
-          setShowForm(true);
-        }}
+				onTaskUpdated={handleTaskUpdated}
+				onTaskEdit={(task) => {
+					setEditingTask(task);
+					setShowForm(true);
+				}}
 			/>
 		</div>
 	);

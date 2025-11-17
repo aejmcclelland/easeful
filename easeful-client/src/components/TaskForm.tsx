@@ -4,10 +4,10 @@ import { createTask, updateTask } from '../lib/tasks';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
 
-
 type TaskFormProps = {
 	onTaskCreated?: (task: Task) => void;
 	onTaskUpdated?: (task: Task) => void;
+	onCancelEdit?: () => void;
 	editingTask?: Task | null;
 };
 
@@ -26,6 +26,7 @@ const initialForm: Task = {
 export default function TaskForm({
 	onTaskCreated,
 	onTaskUpdated,
+	onCancelEdit,
 	editingTask,
 }: TaskFormProps) {
 	const [form, setForm] = useState<Task>(editingTask ?? initialForm);
@@ -54,7 +55,7 @@ export default function TaskForm({
 			if (editingTask && editingTask._id) {
 				const updated = await updateTask(editingTask._id, form);
 				toastSuccess('Task updated successfully', 'updateTaskSuccess');
-
+				onCancelEdit?.();
 				if (onTaskUpdated) {
 					onTaskUpdated(updated);
 				}
@@ -70,8 +71,13 @@ export default function TaskForm({
 			}
 		} catch (err) {
 			const message = getErrorMessage(err);
-			const fallback = editingTask ? 'Failed to update task' : 'Failed to create task';
-			toastError(message || fallback, editingTask ? 'updateTaskError' : 'createTaskError');
+			const fallback = editingTask
+				? 'Failed to update task'
+				: 'Failed to create task';
+			toastError(
+				message || fallback,
+				editingTask ? 'updateTaskError' : 'createTaskError'
+			);
 		} finally {
 			setSubmitting(false);
 		}
@@ -219,8 +225,18 @@ export default function TaskForm({
 				</div>
 			</div>
 
-			<div className='card-actions justify-end'>
-				<button className='btn btn-primary' disabled={submitting}>
+			<div className='card-actions justify-between items-center'>
+				{editingTask && onCancelEdit && (
+					<button
+						type='button'
+						className='btn btn-ghost'
+						onClick={onCancelEdit}
+						disabled={submitting}>
+						Cancel
+					</button>
+				)}
+
+				<button type='submit' className='btn btn-primary' disabled={submitting}>
 					{submitting ? (
 						<span className='loading loading-spinner loading-sm' />
 					) : editingTask ? (
