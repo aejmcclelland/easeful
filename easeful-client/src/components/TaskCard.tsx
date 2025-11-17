@@ -13,7 +13,12 @@ type TaskCardProps = {
 	onEdit?: (task: Task) => void;
 };
 
-export default function TaskCard({ task, onDeleted, onUpdated, onEdit }: TaskCardProps) {
+export default function TaskCard({
+	task,
+	onDeleted,
+	onUpdated,
+	onEdit,
+}: TaskCardProps) {
 	const [deleting, setDeleting] = useState(false);
 	const [updatingPriority, setUpdatingPriority] = useState(false);
 
@@ -51,7 +56,10 @@ export default function TaskCard({ task, onDeleted, onUpdated, onEdit }: TaskCar
 		<div className='card bg-base-100 shadow-md border'>
 			<div className='card-body'>
 				<h2 className='card-title'>{task.task}</h2>
-				<p className='text-sm text-base-content/70'>{task.description}</p>
+				{task.description && (
+					<p className='text-sm text-base-content/70'>{task.description}</p>
+				)}
+
 				<div className='flex justify-between items-center mt-2 gap-2'>
 					{/* Editable priority badge */}
 					<PriorityBadge
@@ -66,11 +74,11 @@ export default function TaskCard({ task, onDeleted, onUpdated, onEdit }: TaskCar
 							: 'No due date'}
 					</span>
 				</div>
+
 				<div className='card-actions justify-end mt-3 gap-2'>
 					<button
 						className='btn btn-outline btn-sm'
-						onClick={() => onEdit?.(task)}
-					>
+						onClick={() => onEdit?.(task)}>
 						Edit
 					</button>
 					<button

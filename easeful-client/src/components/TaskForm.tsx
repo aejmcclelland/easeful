@@ -3,6 +3,7 @@ import type { Task } from '../types/task';
 import { createTask, updateTask } from '../lib/tasks';
 import { getErrorMessage } from '../lib/getErrorMessage';
 import { toastSuccess, toastError } from '../lib/toast';
+import PriorityBadge from './PriorityBadge';
 
 type TaskFormProps = {
 	onTaskCreated?: (task: Task) => void;
@@ -18,7 +19,7 @@ const initialForm: Task = {
 	quickDue: 'none',
 	repeat: 'none',
 	timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-	// dueDate, repeatCount etc if your Task type has them:
+	// Optional fields like dueDate, repeatCount, etc., if present in Task:
 	// dueDate: undefined,
 	// repeatCount: 1,
 };
@@ -51,19 +52,19 @@ export default function TaskForm({
 		setSubmitting(true);
 
 		try {
-			// If we have an editingTask with an id, update instead of create
 			if (editingTask && editingTask._id) {
 				const updated = await updateTask(editingTask._id, form);
 				toastSuccess('Task updated successfully', 'updateTaskSuccess');
-				onCancelEdit?.();
+
 				if (onTaskUpdated) {
 					onTaskUpdated(updated);
 				}
+				onCancelEdit?.();
 			} else {
 				const created = await createTask(form);
 				toastSuccess('Task created successfully', 'createTaskSuccess');
 
-				setForm(initialForm); // reset form
+				setForm(initialForm);
 
 				if (onTaskCreated) {
 					onTaskCreated(created);
@@ -123,16 +124,11 @@ export default function TaskForm({
 					<label className='label'>
 						<span className='label-text'>Priority</span>
 					</label>
-					<select
-						className='select select-bordered'
-						value={form.priority}
-						onChange={(e) =>
-							update('priority', e.target.value as Task['priority'])
-						}>
-						<option>Low</option>
-						<option>Medium</option>
-						<option>High</option>
-					</select>
+					<PriorityBadge
+						priority={form.priority}
+						editable
+						onChange={(newPriority) => update('priority', newPriority)}
+					/>
 				</div>
 
 				<div className='form-control'>
