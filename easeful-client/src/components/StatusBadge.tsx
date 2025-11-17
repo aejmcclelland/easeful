@@ -37,6 +37,7 @@ export default function StatusBadge({
 }: StatusBadgeProps) {
 	const [status, setStatus] = useState<Status>(initialStatus || 'Pending');
 	const [updating, setUpdating] = useState(false);
+	const [open, setOpen] = useState(false);
 
 	async function changeStatus(newStatus: Status) {
 		if (newStatus === status) return;
@@ -49,6 +50,7 @@ export default function StatusBadge({
 			const updated = await updateTask(taskId, { status: newStatus });
 			toastSuccess('Task status updated', 'statusUpdated');
 			onUpdated?.(updated);
+			setOpen(false);
 		} catch (err) {
 			setStatus(previous);
 			const message = getErrorMessage(err);
@@ -61,43 +63,48 @@ export default function StatusBadge({
 	function handleToggleComplete() {
 		const nextStatus: Status = status === 'Completed' ? 'Pending' : 'Completed';
 		void changeStatus(nextStatus);
+		setOpen(false);
 	}
 
 	return (
 		<div className='flex flex-wrap items-center gap-3'>
-			{/* Pill-as-dropdown */}
-			<details
-				className='dropdown'>
-				<summary
-					className={`list-none whitespace-nowrap inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium cursor-pointer focus:outline-none ${
+			{/* Pill-as-dropdown (custom, left-aligned) */}
+			<div className='relative inline-block'>
+				<button
+					type='button'
+					className={`whitespace-nowrap inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium cursor-pointer focus:outline-none w-full ${
 						statusStyles[status].pill
-					} ${updating ? 'opacity-60 pointer-events-none' : ''}`}>
+					} ${updating ? 'opacity-60 pointer-events-none' : ''}`}
+					onClick={() => {
+						if (updating) return;
+						setOpen((prev) => !prev);
+					}}>
 					<span
 						className={`h-2 w-2 rounded-full ${statusStyles[status].dot}`}
 					/>
 					<span>{status}</span>
-				</summary>
+				</button>
 
-				<ul className='dropdown-content menu mt-2 p-2 shadow bg-base-200 rounded-box left-0'>
-					{STATUS_OPTIONS.map((option) => (
-						<li key={option} className='my-1'>
-							<button
-								type='button'
-								className={`flex whitespace-nowrap items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${statusStyles[option].pill}`}
-								onClick={(e) => {
-									changeStatus(option);
-									const details = (e.currentTarget as HTMLElement).closest('details');
-									if (details) (details as HTMLDetailsElement).open = false;
-								}}>
-								<span
-									className={`h-2 w-2 rounded-full ${statusStyles[option].dot}`}
-								/>
-								<span>{option}</span>
-							</button>
-						</li>
-					))}
-				</ul>
-			</details>
+				{open && (
+					<div className='absolute left-0 mt-2 z-20 bg-base-200 shadow-lg rounded-xl py-2 px-0 min-w-full'>
+						<ul className='flex flex-col'>
+							{STATUS_OPTIONS.map((option) => (
+								<li key={option} className='my-1'>
+									<button
+										type='button'
+										className={`flex whitespace-nowrap items-center gap-2 rounded-full px-3 py-1 text-xs font-medium w-full ${statusStyles[option].pill}`}
+										onClick={() => changeStatus(option)}>
+										<span
+											className={`h-2 w-2 rounded-full ${statusStyles[option].dot}`}
+										/>
+										<span>{option}</span>
+									</button>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
 
 			{/* Mark complete / Undo button */}
 			<button
