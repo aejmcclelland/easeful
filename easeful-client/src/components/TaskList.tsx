@@ -1,12 +1,16 @@
 import type { Task } from '../types/task';
 import TaskCard from './TaskCard';
 
+
 type TaskListProps = {
 	tasks: Task[];
 	onTaskDeleted?: (id: string) => void;
+	onTaskUpdated?: (task: Task) => void;
+
 };
 
-export default function TaskList({ tasks, onTaskDeleted }: TaskListProps) {
+
+export default function TaskList({ tasks, onTaskDeleted, onTaskUpdated }: TaskListProps) {
 	function handleDeleted(id: string) {
 		if (onTaskDeleted) onTaskDeleted(id);
 	}
@@ -22,8 +26,13 @@ export default function TaskList({ tasks, onTaskDeleted }: TaskListProps) {
 
 	return (
 		<div className='grid gap-4 md:grid-cols-2'>
-			{tasks.map((t) => (
-				<TaskCard key={t._id || t.task} task={t} onDeleted={handleDeleted} />
+			{tasks.map((task) => (
+				<TaskCard
+					key={task._id || task.task}
+					task={task}
+					onDeleted={handleDeleted}
+					onUpdated={onTaskUpdated}
+				/>
 			))}
 		</div>
 	);
