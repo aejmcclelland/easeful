@@ -30,12 +30,12 @@ export async function listTasks(): Promise<Task[]> {
 	return json.data as Task[];
 }
 
-export async function updateTask(id: string, updates: Partial<Task>) {
+export async function updateTask(id: string, data: Partial<Task>) {
 	const res = await fetch(`${API_BASE}/${id}`, {
 		method: 'PUT',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(updates),
+		body: JSON.stringify(data),
 	});
 	const json = await res.json().catch(() => ({}));
 	if (!res.ok || !json?.success) {

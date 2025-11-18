@@ -1,5 +1,5 @@
 // src/types/task.ts
-import type { TaskStatus } from '../components/StatusBadge';
+export type TaskStatus = 'Pending' | 'In Progress' | 'Completed';
 
 export type Task = {
 	_id?: string;
@@ -18,6 +18,8 @@ export type Task = {
 	createdAt?: string;
 	updatedAt?: string;
 };
+
+
 
 // Useful when creating a new task (server will assign _id/createdAt/etc.)
 export type CreateTaskPayload = Omit<Task, '_id' | 'createdAt' | 'updatedAt'>;

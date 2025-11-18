@@ -19,6 +19,7 @@ const initialForm: Task = {
 	quickDue: 'none',
 	repeat: 'none',
 	timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+	status: 'Pending',
 	// Optional fields like dueDate, repeatCount, etc., if present in Task:
 	// dueDate: undefined,
 	// repeatCount: 1,
