@@ -8,7 +8,9 @@ import PriorityBadge from './PriorityBadge';
 type TaskFormProps = {
 	onTaskCreated?: (task: Task) => void;
 	onTaskUpdated?: (task: Task) => void;
+	onCreated?: (task: Task) => void;
 	onCancelEdit?: () => void;
+	onCancel?: () => void;
 	editingTask?: Task | null;
 };
 
@@ -30,6 +32,7 @@ export default function TaskForm({
 	onTaskUpdated,
 	onCancelEdit,
 	editingTask,
+	onCancel,
 }: TaskFormProps) {
 	const [form, setForm] = useState<Task>(editingTask ?? initialForm);
 	const [submitting, setSubmitting] = useState(false);
@@ -223,11 +226,11 @@ export default function TaskForm({
 			</div>
 
 			<div className='card-actions justify-between items-center'>
-				{editingTask && onCancelEdit && (
+				{(editingTask ? onCancelEdit : onCancel) && (
 					<button
 						type='button'
 						className='btn btn-secondary'
-						onClick={onCancelEdit}
+						onClick={editingTask ? onCancelEdit : onCancel}
 						disabled={submitting}>
 						Cancel
 					</button>

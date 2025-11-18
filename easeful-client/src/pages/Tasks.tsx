@@ -66,48 +66,62 @@ export default function Tasks() {
 	}
 
 	return (
-		<div className='max-w-4xl mx-auto p-6 space-y-8'>
-			<div>
-				<h1 className='text-4xl font-bold mb-2 text-primary text-center'>
-					Tasks
-				</h1>
-				<p className='text-base-content/70 text-center'>
-					Create and manage your tasks with quick due options and repeat
-					scheduling.
-				</p>
-			</div>
+		<div className='max-w-4xl mx-auto p-6 space-y-6'>
+			{/* Header with title and Add task button */}
+			<div className='flex items-center justify-between gap-4'>
+				<div>
+					<h1 className='text-3xl font-bold mb-1 text-primary'>Tasks</h1>
+					<p className='text-sm text-base-content/70'>
+						Create and manage your tasks with due options and repeat scheduling.
+					</p>
+				</div>
 
-			{showForm && (
-				<TaskForm
-					editingTask={editingTask}
-					onTaskCreated={(newTask) => {
-						handleTaskCreated(newTask);
-						setShowForm(false);
-					}}
-					onTaskUpdated={(updatedTask) => {
-						handleTaskUpdated(updatedTask);
-						setEditingTask(null);
-						setShowForm(false);
-					}}
-					onCancelEdit={() => {
-						setEditingTask(null);
-						setShowForm(false);
-					}}
-				/>
-			)}
-
-			{!showForm && (
 				<button
-					className='btn btn-primary'
+					className='btn btn-primary btn-sm gap-2'
 					onClick={() => {
 						setEditingTask(null);
-						setShowForm(true);
+						setShowForm((prev) => !prev);
 					}}>
-					+ Add task
+					<span className='text-lg leading-none'>＋</span>
+					<span>{showForm ? 'Close form' : 'Add task'}</span>
 				</button>
-			)}
+			</div>
 
-			<div className='divider'>Your Tasks</div>
+			{/* Collapsible TaskForm card */}
+			<div
+				className={`transition-all duration-200 ${
+					showForm
+						? 'opacity-100 max-h-[1000px] translate-y-0'
+						: 'opacity-0 max-h-0 -translate-y-2 pointer-events-none'
+				}`}>
+				{showForm && (
+					<div className='card bg-base-100 shadow-md border border-base-300'>
+						<div className='card-body'>
+							<TaskForm
+								editingTask={editingTask}
+								onTaskCreated={(newTask) => {
+									handleTaskCreated(newTask);
+									setShowForm(false);
+								}}
+								onTaskUpdated={(updatedTask) => {
+									handleTaskUpdated(updatedTask);
+									setEditingTask(null);
+									setShowForm(false);
+								}}
+								onCancelEdit={() => {
+									setEditingTask(null);
+									setShowForm(false);
+								}}
+								onCancel={() => {
+									setShowForm(false);
+								}}
+							/>
+						</div>
+					</div>
+				)}
+			</div>
+
+			<div className='divider my-4'>Your Tasks</div>
 
 			<TaskList
 				tasks={tasks}
