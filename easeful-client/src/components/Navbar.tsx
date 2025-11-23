@@ -13,20 +13,20 @@ export default function Navbar() {
 					Easeful
 				</Link>
 			</div>
-			<div className='flex-none gap-2'>
+			<div className='flex-none flex items-center space-x-2'>
 				{user ? (
 					<>
 						<span className='hidden sm:inline opacity-70'>
 							Hi, {user.name.split(' ')[0]}
 						</span>
-						<Link className='btn btn-soft btn-info' to='/tasks'>
+						<Link className='btn btn-sm btn-soft btn-default' to='/tasks'>
 							Tasks
 						</Link>
-						<Link className='btn btn-soft btn-info' to='/profile'>
+						<Link className='btn btn-sm btn-soft btn-default' to='/profile'>
 							Profile
 						</Link>
 						<button
-							className='btn btn-soft btn-info'
+							className='btn btn-sm btn-soft btn-default'
 							onClick={async () => {
 								await logout();
 								nav('/', { replace: true });
@@ -36,10 +36,10 @@ export default function Navbar() {
 					</>
 				) : (
 					<>
-						<Link className='btn btn-soft btn-info' to='/register'>
+						<Link className='btn btn-sm btn-soft btn-default' to='/register'>
 							Register
 						</Link>
-						<Link className='btn btn-soft btn-info' to='/login'>
+						<Link className='btn btn-sm btn-soft btn-default' to='/login'>
 							Login
 						</Link>
 					</>

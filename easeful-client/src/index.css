@@ -1,4 +1,4 @@
 @import 'tailwindcss';
 @plugin "daisyui" {
-	themes: synthwave --default, dracula --prefers-dark;
+	themes: garden --default, dracula --prefers-dark;
 }
