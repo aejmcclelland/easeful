@@ -229,7 +229,7 @@ export default function TaskForm({
 				{(editingTask ? onCancelEdit : onCancel) && (
 					<button
 						type='button'
-						className='btn btn-secondary'
+						className='btn btn-soft btn-primary'
 						onClick={editingTask ? onCancelEdit : onCancel}
 						disabled={submitting}>
 						Cancel
