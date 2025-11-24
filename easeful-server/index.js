@@ -37,8 +37,8 @@ try {
 //use CORS middleware
 // Allow requests from localhost:3001
 const allowedOrigins = [
-	'http://localhost:3001',
-	process.env.CLIENT_ORIGIN,
+	'http://localhost:3001', // dev
+	'https://easeful.amcclelland.net', // live site
 ].filter(Boolean);
 
 app.use(

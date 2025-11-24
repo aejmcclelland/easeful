@@ -6,7 +6,8 @@ function sessionCookieOptions(days = 1) {
 	return {
 		httpOnly: true,
 		secure: true,
-		sameSite: 'none', // use 'none' only if truly cross-site
+		sameSite: 'lax', 
+		domain: '.amcclelland.net',
 		path: '/',
 		maxAge: days * DAY,
 	};
