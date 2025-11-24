@@ -126,10 +126,17 @@ const users = require('./src/routes/users');
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 const tasksRouter = require('./src/routes/tasks');
+
+// Mount tasks router at /api/easeful/tasks so
+// GET /api/easeful/tasks hits the task list route
+app.use('/api/easeful/tasks', tasksRouter);
+
+// Optional legacy mount to keep older clients working, if any
+// (routes inside tasksRouter should be defined from '/')
 app.use('/api/easeful', tasksRouter);
-app.use('/api/easeful', tasksRouter); //legacy
-app.use('/api/auth', auth); //mount routers
-app.use('/api/users', users); //mount routers
+
+app.use('/api/auth', auth); // mount routers
+app.use('/api/users', users); // mount routers
 
 app.use(errorHandler);
 
