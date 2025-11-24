@@ -1,7 +1,7 @@
-import { API } from './api';
+import { apiFetch } from './api';
 
 export async function loginRequest(email: string, password: string) {
-	const res = await fetch(`${API}/api/auth/login`, {
+	const res = await apiFetch('/api/auth/login', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ email, password }),
@@ -28,7 +28,7 @@ export async function registerRequest(
 	email: string,
 	password: string
 ) {
-	const res = await fetch(`${API}/api/auth/register`, {
+	const res = await apiFetch('/api/auth/register', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ name, email, password }),

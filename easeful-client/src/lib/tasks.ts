@@ -1,11 +1,11 @@
 import type { Task } from '../types/task';
 import { apiFetch } from './api';
-import {API} from "./api";	
-// Vite: use import.meta.env.DEV instead of process.env.NODE_ENV
-const API_BASE = import.meta.env.DEV ? '/api/easeful' : `${API}/api/tasks`;
+
+// Always prefix with the backend base URL
+const API_BASE = '/api/tasks';
 
 export async function createTask(payload: Task) {
-	const res = await fetch(API_BASE, {
+	const res = await apiFetch(API_BASE, {
 		method: 'POST',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
@@ -23,7 +23,7 @@ export async function createTask(payload: Task) {
 }
 
 export async function listTasks(): Promise<Task[]> {
-	const res = await fetch(API_BASE, { credentials: 'include' });
+	const res = await apiFetch(API_BASE, { credentials: 'include' });
 	const json = await res.json().catch(() => ({}));
 	if (!res.ok || !json?.success) {
 		throw new Error(json?.error || 'Failed to load tasks');
@@ -32,7 +32,7 @@ export async function listTasks(): Promise<Task[]> {
 }
 
 export async function updateTask(id: string, data: Partial<Task>) {
-	const res = await fetch(`${API_BASE}/${id}`, {
+	const res = await apiFetch(`${API_BASE}/${id}`, {
 		method: 'PUT',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
@@ -46,7 +46,7 @@ export async function updateTask(id: string, data: Partial<Task>) {
 }
 
 export async function getTaskById(id: string): Promise<Task> {
-	const res = await fetch(`${API_BASE}/${id}`, {
+	const res = await apiFetch(`${API_BASE}/${id}`, {
 		credentials: 'include',
 	});
 
@@ -59,7 +59,7 @@ export async function getTaskById(id: string): Promise<Task> {
 	return json.data as Task;
 }
 export async function deleteTask(id: string) {
-	const res = await fetch(`${API_BASE}/${id}`, {
+	const res = await apiFetch(`${API_BASE}/${id}`, {
 		method: 'DELETE',
 		credentials: 'include',
 	});
@@ -73,7 +73,7 @@ export const updateTaskStatus = async (
 	taskId: string,
 	status: 'Pending' | 'In Progress' | 'Completed'
 ) => {
-	const res = await apiFetch(`/tasks/${taskId}`, {
+	const res = await apiFetch(`${API_BASE}/${taskId}`, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ status }),

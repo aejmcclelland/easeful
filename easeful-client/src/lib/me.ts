@@ -1,27 +1,27 @@
-import { API } from './api';
+import { apiFetch } from './api';
 
 export async function deleteMe() {
-  const response = await fetch(`${API}/api/auth/me`, {
-    method: 'DELETE',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ confirm: true }),
-  });
+	const response = await apiFetch('/api/auth/me', {
+		method: 'DELETE',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ confirm: true }),
+	});
 
-  if (response.status === 204) {
-    // Successful delete, no content to return
-    return;
-  }
+	if (response.status === 204) {
+		// Successful delete, no content to return
+		return;
+	}
 
-  let message = 'Failed to delete user account';
-  try {
-    const data = await response.json();
-    if (data?.error) message = data.error;
-  } catch {
-    // ignore JSON parse errors, keep default message
-  }
+	let message = 'Failed to delete user account';
+	try {
+		const data = await response.json();
+		if (data?.error) message = data.error;
+	} catch {
+		// ignore JSON parse errors, keep default message
+	}
 
-  throw new Error(message);
+	throw new Error(message);
 }
