@@ -1,6 +1,7 @@
+import { API } from './api';
 
 export async function deleteMe() {
-  const response = await fetch('/api/auth/me', {
+  const response = await fetch(`${API}/api/auth/me`, {
     method: 'DELETE',
     credentials: 'include',
     headers: {

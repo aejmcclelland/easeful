@@ -1,7 +1,8 @@
 import type { Task } from '../types/task';
 import { apiFetch } from './api';
+import {API} from "./api";	
 // Vite: use import.meta.env.DEV instead of process.env.NODE_ENV
-const API_BASE = import.meta.env.DEV ? '/api/easeful' : '/api/tasks';
+const API_BASE = import.meta.env.DEV ? '/api/easeful' : `${API}/api/tasks`;
 
 export async function createTask(payload: Task) {
 	const res = await fetch(API_BASE, {
