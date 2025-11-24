@@ -5,7 +5,7 @@ const COOKIE_NAME = 'sid';
 function sessionCookieOptions(days = 1) {
 	return {
 		httpOnly: true,
-		secure: 'none',
+		secure: true,
 		sameSite: 'none', // use 'none' only if truly cross-site
 		path: '/',
 		maxAge: days * DAY,

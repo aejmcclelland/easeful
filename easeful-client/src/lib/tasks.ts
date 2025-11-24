@@ -2,7 +2,7 @@ import type { Task } from '../types/task';
 import { apiFetch } from './api';
 
 // Always prefix with the backend base URL
-const API_BASE = '/api/tasks';
+const API_BASE = '/api/easeful/tasks';
 
 export async function createTask(payload: Task) {
 	const res = await apiFetch(API_BASE, {
