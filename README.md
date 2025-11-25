@@ -56,7 +56,7 @@ The app is deployed across **AWS CloudFront**, **AWS S3**, and **Render**, follo
 
 ---
 
-## ☁️ Architecture
+## Architecture
 
 - easeful.amcclelland.net  → AWS CloudFront → S3 (static React frontend)
 - api.easeful.amcclelland.net → Render → Express API → MongoDB Atlas
@@ -66,7 +66,7 @@ The app is deployed across **AWS CloudFront**, **AWS S3**, and **Render**, follo
 
 ---
 
-## 📦 Local Development
+## Local Development
 
 ```bash
 pnpm install
