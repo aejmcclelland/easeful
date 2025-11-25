@@ -2,40 +2,40 @@
 
 A full-stack task management application built with modern web technologies. Easeful allows users to create, manage, and organize their tasks with advanced features including image uploads, location tracking, user authentication, and avatar management.
 
-## 🚀 Features
+## Features
 
 ### User Features
 
-#### 🔐 Authentication & User Management
+#### Authentication & User Management
 - **User Registration & Login**: Simple account creation with secure authentication
 - **Avatar Upload**: Personalized user profiles with custom avatar images
 - **Profile Management**: Update user details and change passwords
 - **Role-Based Access**: User and Admin roles with appropriate permissions
 
-#### 📋 Task Management
+#### Task Management
 - **Create Tasks**: Add tasks with title, description, priority, and due dates
 - **Task Status Tracking**: Monitor progress with Pending, In Progress, and Completed statuses
 - **Priority Levels**: Organize tasks by Low, Medium, and High priority
 - **Labels/Tags**: Categorize tasks with custom labels
 
-#### 🎨 User Interface
+#### User Interface
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Dark/Light Theme Support**: Modern UI with DaisyUI components
 - **Interactive Navigation**: Clean navbar with user dropdown menus
 
 ### Advanced Features
 
-#### 🌐 Real-Time Features
+#### Real-Time Features
 - **Live Updates**: Automatic refresh of user data when window gains focus
 - **Optimistic UI**: Immediate feedback for user actions
 - **Loading States**: Visual indicators for all async operations
 
-#### 📱 Mobile Experience
+#### Mobile Experience
 - **Mobile Menu**: Hamburger menu with smooth animations
 - **Touch Optimized**: Mobile-friendly interactions and gestures
 - **Progressive Web App Ready**: Can be installed on mobile devices
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend (Client)
 - **Framework**: Next.js 15.4.7 (React 19)
@@ -116,7 +116,7 @@ A full-stack task management application built with modern web technologies. Eas
 }
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication Routes (`/api/auth`)
 - `POST /register` - User registration
@@ -136,7 +136,7 @@ A full-stack task management application built with modern web technologies. Eas
 - `PUT /:id` - Update user (admin only)
 - `DELETE /:id` - Delete user (admin only)
 
-### Task Management (`/api/taskman`)
+### Task Management (`/api/easeful`)
 - `GET /` - Get user's tasks (with filtering/pagination)
 - `POST /` - Create new task (with image upload)
 - `GET /:id` - Get single task
@@ -147,17 +147,17 @@ A full-stack task management application built with modern web technologies. Eas
 - `PUT /:id/toggle-public` - Toggle task public/private
 - `DELETE /reset` - Reset all tasks (development only)
 
-## 🏗️ Architecture
+## Architecture
 
 ### Monorepo Structure
 ```
-taskmanager/
-├── taskmanager-client/          # Next.js frontend
+easeful/
+├── easeful-client/          # Next.js frontend
 │   ├── src/
 │   │   ├── app/                 # App router pages
 │   │   ├── components/          # React components
 │   │   └── lib/                 # Utilities and types
-├── taskmanager-server/          # Express.js backend
+├── easeful-server/          # Express.js backend
 │   ├── src/
 │   │   ├── controllers/         # Route controllers
 │   │   ├── models/             # Mongoose models
@@ -180,7 +180,7 @@ taskmanager/
 3. **Avatar**: Old avatar deleted from Cloudinary → New avatar uploaded → User updated
 4. **Tasks**: Multiple images supported → Stored in images array
 
-## 🚦 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
@@ -206,7 +206,7 @@ SMTP_PORT=587
 SMTP_EMAIL=your_email
 SMTP_PASSWORD=your_email_password
 FROM_EMAIL=noreply@yourapp.com
-FROM_NAME=Taskman
+FROM_NAME=Easeful
 ```
 
 #### Client (.env.local)
@@ -242,7 +242,7 @@ NEXT_PUBLIC_API_BASE=http://localhost:3000
    pnpm dev:client  # Client on port 3001
    ```
 
-## 🔧 Development
+## Development
 
 ### Available Scripts
 
@@ -277,7 +277,7 @@ NEXT_PUBLIC_API_BASE=http://localhost:3000
 - `async.js` - Async error handling wrapper
 - `error.js` - Global error handling
 
-## 🔒 Security Features
+## Security Features
 
 - **Password Hashing**: bcryptjs with salt rounds
 - **JWT Tokens**: Secure, httpOnly cookies
@@ -288,15 +288,8 @@ NEXT_PUBLIC_API_BASE=http://localhost:3000
 - **CORS Configuration**: Controlled cross-origin requests
 - **File Upload Security**: File type and size validation
 
-## 📱 Mobile Responsiveness
 
-- **Breakpoint System**: Mobile-first responsive design
-- **Touch Interactions**: Optimized for mobile gestures
-- **Performance**: Fast loading on mobile networks
-- **Navigation**: Mobile-friendly menu system
-- **Forms**: Touch-optimized form inputs
-
-## 🎯 Future Enhancement Ideas
+## Future Enhancement Ideas
 
 ### For Contributors
 
