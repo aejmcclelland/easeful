@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { User } from './authTypes';
 import { AuthContext } from './auth-context';
 import { apiFetch } from '../lib/api';
+import LoadingScreen from '../components/LoadingScreen';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<AuthContext.Provider value={{ user, loading, refresh, logout, setUser }}>
-			{children}
+			{loading ? <LoadingScreen /> : children}
 		</AuthContext.Provider>
 	);
 }

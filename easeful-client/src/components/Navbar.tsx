@@ -1,10 +1,11 @@
 // src/components/Navbar.tsx
 import { useAuth } from '../hooks/useAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
 	const { user, logout } = useAuth();
 	const nav = useNavigate();
+	const location = useLocation();
 
 	return (
 		<div className='navbar bg-base-100'>
@@ -36,12 +37,16 @@ export default function Navbar() {
 					</>
 				) : (
 					<>
-						<Link className='btn btn-sm btn-soft btn-default' to='/register'>
-							Register
-						</Link>
-						<Link className='btn btn-sm btn-soft btn-default' to='/login'>
-							Login
-						</Link>
+						{location.pathname !== '/register' && (
+							<Link className='btn btn-sm btn-soft btn-default' to='/register'>
+								Register
+							</Link>
+						)}
+						{location.pathname !== '/login' && (
+							<Link className='btn btn-sm btn-soft btn-default' to='/login'>
+								Login
+							</Link>
+						)}
 					</>
 				)}
 			</div>
