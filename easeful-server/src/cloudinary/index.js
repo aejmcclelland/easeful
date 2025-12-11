@@ -22,7 +22,21 @@ const storage = new CloudinaryStorage({
 	},
 });
 
+const storageAvatar = new CloudinaryStorage({
+	cloudinary,
+	params: {
+		folder: 'TaskManager/avatars',
+		allowed_formats: ['jpeg', 'jpg', 'png'],
+		public_id: (req, file) => {
+			const id = req.user?.id || 'anonymous';
+			const timestamp = Date.now();
+			return `avatar_${id}_${timestamp}`;
+		},
+	},
+});
+
 module.exports = {
 	cloudinary,
 	storage,
+	storageAvatar,
 };

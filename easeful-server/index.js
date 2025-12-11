@@ -83,9 +83,9 @@ app.use(cookieParser());
 
 app.use(
 	fileUpload({
-		useTempFiles: true, // lets Cloudinary/streams work nicely
+		useTempFiles: true, 
 		tempFileDir: '/tmp', // Render/Vercel friendly temp path
-		limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit (match FILE_UPLOAD_LIMIT if you like)
+		limits: { fileSize: 8 * 1024 * 1024 }, // 5MB limit (match FILE_UPLOAD_LIMIT if you like)
 		abortOnLimit: true,
 		createParentPath: false,
 	})

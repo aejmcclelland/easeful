@@ -15,9 +15,6 @@ export default function Home() {
 				<a href='/tasks' className='btn btn-primary'>
 					Get Started
 				</a>
-				<a href='/profile' className='btn btn-outline'>
-					View Profile
-				</a>
 			</div>
 		</div>
 	);

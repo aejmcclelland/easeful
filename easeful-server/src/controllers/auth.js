@@ -186,7 +186,7 @@ exports.updateAvatar = asyncHandler(async (req, res, next) => {
 	if (!file.mimetype.startsWith('image'))
 		return next(new ErrorResponse('Please upload an image file', 400));
 
-	const MAX = Number(process.env.FILE_UPLOAD_LIMIT || 1048576);
+	const MAX = Number(process.env.FILE_UPLOAD_LIMIT || 8 * 1024 * 1024);
 	if (file.size > MAX) {
 		return next(
 			new ErrorResponse(`Please upload an image less than ${MAX}`, 400)
