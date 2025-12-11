@@ -176,6 +176,7 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/auth/updateavatar
 // @access  Private
 exports.updateAvatar = asyncHandler(async (req, res, next) => {
+	 console.log('>>> updateAvatar hit for user:', req.user?.id); //cehcking updatateAvatar hit
 	const user = await User.findById(req.user.id);
 	if (!user) return next(new ErrorResponse('User not found', 404));
 
@@ -187,6 +188,7 @@ exports.updateAvatar = asyncHandler(async (req, res, next) => {
 		return next(new ErrorResponse('Please upload an image file', 400));
 
 	const MAX = Number(process.env.FILE_UPLOAD_LIMIT || 8 * 1024 * 1024);
+	console.log('>>> FILE_UPLOAD_LIMIT:', process.env.FILE_UPLOAD_LIMIT, 'MAX:', MAX, 'file size:', file.size);
 	if (file.size > MAX) {
 		return next(
 			new ErrorResponse(`Please upload an image less than ${MAX}`, 400)
@@ -248,6 +250,9 @@ exports.updateAvatar = asyncHandler(async (req, res, next) => {
 			upload.end(file.data);
 		});
 	} catch (error) {
+		 console.log('>>> updateAvatar hit for user:', req.user?.id);
+		 console.error(error);
+
 		return next(new ErrorResponse('Problem with file upload', 500));
 	}
 });
