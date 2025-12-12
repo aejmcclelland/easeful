@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { toastSuccess, toastError } from '../lib/toast';
 import { useAuth } from '../hooks/useAuth';
+import { apiFetch } from '../lib/api';
 
 type Props = {
 	/** Existing avatar URL to show initially */
@@ -8,6 +9,8 @@ type Props = {
 	/** Max file size in bytes (default 1MB) */
 	maxBytes?: number;
 };
+
+const AVATAR_PATH = '/api/auth/updateavatar';
 
 export default function AvatarUploader({
 	currentUrl,
@@ -49,14 +52,14 @@ export default function AvatarUploader({
 		try {
 			const fd = new FormData();
 			fd.append('avatar', f);
-			const res = await fetch('/api/auth/updateavatar', {
+			const res = await apiFetch(AVATAR_PATH, {
 				method: 'PUT',
 				credentials: 'include',
 				body: fd,
 			});
 			const json = await res.json().catch(() => ({}));
 			if (!res.ok || !json?.success) {
-				throw new Error(json?.error || 'Upload failed');
+				throw new Error(json?.error || 'Avatar upload failed');
 			}
 			// Update global user with the new avatar data
 			setUser((prev) => {

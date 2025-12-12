@@ -85,7 +85,7 @@ app.use(
 	fileUpload({
 		useTempFiles: true, 
 		tempFileDir: '/tmp', // Render/Vercel friendly temp path
-		limits: { fileSize: 8 * 1024 * 1024 }, // 5MB limit (match FILE_UPLOAD_LIMIT if you like)
+		limits: { fileSize: 8 * 1024 * 1024 }, // 8MB limit 
 		abortOnLimit: true,
 		createParentPath: false,
 	})
@@ -119,7 +119,6 @@ app.use(limiter);
 app.use(hpp());
 
 //Route files
-const tasks = require('./src/routes/tasks');
 const auth = require('./src/routes/auth');
 const users = require('./src/routes/users');
 
