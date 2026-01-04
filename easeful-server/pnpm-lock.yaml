@@ -75,8 +75,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       nodemailer:
-        specifier: ^6.10.1
-        version: 6.10.1
+        specifier: ^7.0.12
+        version: 7.0.12
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
@@ -593,8 +593,8 @@ packages:
     resolution: {integrity: sha512-krx50Gxl4yBgMBhfUhOuNwStzLi+gAYaa46gs0e+ftTvaqLsjKYDFVxC8ff6RLc2f11Gp7Y+R1mkzwsE2c0chw==}
     engines: {node: '>=18'}
 
-  nodemailer@6.10.1:
-    resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
+  nodemailer@7.0.12:
+    resolution: {integrity: sha512-H+rnK5bX2Pi/6ms3sN4/jRQvYSMltV6vqup/0SFOrxYYY/qoNvhXPlYq3e+Pm9RFJRwrMGbMIwi81M4dxpomhA==}
     engines: {node: '>=6.0.0'}
 
   nodemon@3.1.11:
@@ -1378,7 +1378,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  nodemailer@6.10.1: {}
+  nodemailer@7.0.12: {}
 
   nodemon@3.1.11:
     dependencies:
