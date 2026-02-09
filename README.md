@@ -31,9 +31,7 @@ The app is deployed across **AWS CloudFront**, **AWS S3**, and **Render**, follo
 ### Cloud Deployment
 - Frontend hosted on **AWS S3**  
 - Served globally through **AWS CloudFront**  
-- Backend API deployed on **Render**  
-- SSL certificates via AWS Certificate Manager  
-- DNS managed via Porkbun  
+- Backend API deployed on **Render**    
 - Proper CORS + cookie handling across domains  
 
 ---
