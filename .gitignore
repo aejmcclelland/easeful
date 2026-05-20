@@ -26,3 +26,9 @@ yarn-error.log*
 # ai
 /Chat-notes/
 
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
