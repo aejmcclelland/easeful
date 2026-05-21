@@ -7,13 +7,14 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function Register() {
 	const [form, setForm] = useState({ name: '', email: '', password: '' });
-	//
+	const [error, setError] = useState('');
+	const [submitting, setSubmitting] = useState(false);
 	const nav = useNavigate();
 	const { refresh } = useAuth();
-	const [submitting, setSubmitting] = useState(false);
 
 	const onSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setError('');
 		setSubmitting(true);
 
 		try {
@@ -28,6 +29,8 @@ export default function Register() {
 				message =
 					'An account with that email already exists. Try signing in instead.';
 			}
+
+			setError(message);
 			toastError(message, 'registerError');
 		} finally {
 			setSubmitting(false);
@@ -42,35 +45,61 @@ export default function Register() {
 					<p className='text-center mb-4'>Register to start using Easeful</p>
 
 					<form onSubmit={onSubmit} className='space-y-3'>
+						{error && (
+							<div role='alert' className='alert alert-error text-sm'>
+								<span>{error}</span>
+							</div>
+						)}
 						<fieldset className='fieldset bg-base-200 border-base-300 rounded-box border p-4'>
 							<legend className='fieldset-legend'>Register</legend>
 
-							<label className='label'>Name</label>
+							<label htmlFor='register-name' className='label'>
+								Name
+							</label>
 							<input
+								id='register-name'
 								className='input w-full'
 								placeholder='Your name'
 								value={form.name}
-								onChange={(e) => setForm({ ...form, name: e.target.value })}
+								onChange={(e) => {
+									setForm({ ...form, name: e.target.value });
+									if (error) setError('');
+								}}
+								disabled={submitting}
 								required
 							/>
 
-							<label className='label'>Email</label>
+							<label htmlFor='register-email' className='label'>
+								Email
+							</label>
 							<input
+								id='register-email'
 								type='email'
 								className='input w-full'
 								placeholder='Email'
 								value={form.email}
-								onChange={(e) => setForm({ ...form, email: e.target.value })}
+								onChange={(e) => {
+									setForm({ ...form, email: e.target.value });
+									if (error) setError('');
+								}}
+								disabled={submitting}
 								required
 							/>
 
-							<label className='label'>Password</label>
+							<label htmlFor='register-password' className='label'>
+								Password
+							</label>
 							<input
+								id='register-password'
 								type='password'
 								className='input w-full'
 								placeholder='Password'
 								value={form.password}
-								onChange={(e) => setForm({ ...form, password: e.target.value })}
+								onChange={(e) => {
+									setForm({ ...form, password: e.target.value });
+									if (error) setError('');
+								}}
+								disabled={submitting}
 								required
 							/>
 

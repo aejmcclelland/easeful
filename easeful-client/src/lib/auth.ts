@@ -1,5 +1,14 @@
 import { apiFetch } from './api';
 
+async function getAuthErrorMessage(res: Response, fallback: string) {
+	try {
+		const data = await res.json();
+		return typeof data?.error === 'string' && data.error ? data.error : fallback;
+	} catch {
+		return fallback;
+	}
+}
+
 export async function loginRequest(email: string, password: string) {
 	const res = await apiFetch('/api/auth/login', {
 		method: 'POST',
@@ -9,20 +18,13 @@ export async function loginRequest(email: string, password: string) {
 	});
 
 	if (!res.ok) {
-		let msg = 'Login failed';
-		try {
-			const data = await res.json();
-			if (data?.error) msg = data.error;
-		} catch {
-			// ignore JSON parse errors
-		}
-		throw new Error(msg);
+		throw new Error(await getAuthErrorMessage(res, 'Login failed'));
 	}
 
 	return res;
 }
 
-// registerRequest to hadle registration errors
+// registerRequest handles registration errors from the API
 export async function registerRequest(
 	name: string,
 	email: string,
@@ -36,14 +38,7 @@ export async function registerRequest(
 	});
 
 	if (!res.ok) {
-		let msg = 'Registration failed';
-		try {
-			const data = await res.json();
-			if (data?.error) msg = data.error;
-		} catch {
-			// ignore JSON parse errors
-		}
-		throw new Error(msg);
+		throw new Error(await getAuthErrorMessage(res, 'Registration failed'));
 	}
 
 	return res;

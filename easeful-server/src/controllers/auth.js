@@ -1,12 +1,12 @@
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const sendEmail = require('../utils/sendEmail');
 const User = require('../models/User');
 const Task = require('../models/Tasks');
 const { cloudinary } = require('../cloudinary');
-const { COOKIE_NAME, sessionCookieOptions, DAY } = require('../config/cookies');
-const fs = require('fs');
+const { COOKIE_NAME, DAY } = require('../config/cookies');
+const fs = require('node:fs');
 const isProd = process.env.NODE_ENV === 'production';
 
 const cookieOptions = {
@@ -36,9 +36,31 @@ async function sendSession(user, req, res, statusCode = 200) {
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = asyncHandler(async (req, res) => {
+exports.register = asyncHandler(async (req, res, next) => {
 	const { name, email, password } = req.body;
-	const user = await User.create({ name, email, password, role: 'user' });
+
+	if (!name || !email || !password) {
+		return next(
+			new ErrorResponse('Please provide a name, email and password', 400)
+		);
+	}
+
+	const normalisedEmail = email.trim().toLowerCase();
+	const existingUser = await User.findOne({ email: normalisedEmail });
+
+	if (existingUser) {
+		return next(
+			new ErrorResponse('An account already exists with this email address', 409)
+		);
+	}
+
+	const user = await User.create({
+		name: name.trim(),
+		email: normalisedEmail,
+		password,
+		role: 'user',
+	});
+
 	await sendSession(user, req, res, 201);
 });
 
@@ -47,10 +69,14 @@ exports.register = asyncHandler(async (req, res) => {
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
 	const { email, password } = req.body;
-	if (!email || !password)
-		return next(new ErrorResponse('Please provide an email and password', 400));
 
-	const user = await User.findOne({ email }).select('+password');
+	if (!email || !password) {
+		return next(new ErrorResponse('Please provide an email and password', 400));
+	}
+
+	const normalisedEmail = email.trim().toLowerCase();
+	const user = await User.findOne({ email: normalisedEmail }).select('+password');
+
 	if (!user || !(await user.matchPassword(password))) {
 		return next(new ErrorResponse('Invalid credentials', 401));
 	}
@@ -123,9 +149,21 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/forgotpassword
 // @access  Public
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-	const user = await User.findOne({ email: req.body.email });
-	if (!user)
-		return next(new ErrorResponse('There is no user with that email', 404));
+	const neutralResponse = {
+		success: true,
+		data: 'If an account exists for that email, password reset instructions have been sent',
+	};
+
+	if (!req.body.email) {
+		return next(new ErrorResponse('Please provide an email address', 400));
+	}
+
+	const normalisedEmail = req.body.email.trim().toLowerCase();
+	const user = await User.findOne({ email: normalisedEmail });
+
+	if (!user) {
+		return res.status(200).json(neutralResponse);
+	}
 
 	const resetToken = user.getResetPasswordToken();
 	await user.save({ validateBeforeSave: false });
@@ -141,8 +179,10 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 			subject: 'Password reset token',
 			message,
 		});
-		return res.status(200).json({ success: true, data: 'Email sent' });
+		return res.status(200).json(neutralResponse);
 	} catch (err) {
+		// Log the error and clean up reset token fields
+		console.error('Forgot password - sendEmail error:', err);
 		user.resetPasswordToken = undefined;
 		user.resetPasswordExpire = undefined;
 		await user.save({ validateBeforeSave: false });

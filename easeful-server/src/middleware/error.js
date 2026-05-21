@@ -1,4 +1,3 @@
-const ErrorResponse = require('../utils/errorResponse');
 
 /**
  * Centralised error handler
@@ -30,7 +29,9 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === 'ValidationError') {
     status = 400;
     // Collect all field messages
-    const msgs = Object.values(err.errors || {}).map(v => v.message).filter(Boolean);
+    const msgs = Object.values(err.errors || {})
+      .map((v) => v.message)
+      .filter(Boolean);
     message = msgs.length ? msgs.join(', ') : 'Validation failed';
   }
 
