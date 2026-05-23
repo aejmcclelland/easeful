@@ -2,6 +2,8 @@
 
 This directory contains the initial Terraform configuration for the Easeful frontend.
 
+The Terraform dev stack provisions a private S3 bucket and CloudFront distribution for the Easeful React/Vite frontend. It uses Origin Access Control so the bucket is not public, includes SPA fallback responses for client-side routing, and uses PriceClass_100 to keep the setup cost-conscious. The backend remains hosted separately on Render.
+
 ## What It Creates
 
 This phase creates frontend-only AWS infrastructure for a React/Vite static build:
