@@ -20,13 +20,6 @@ export default defineConfig({
 				target: 'http://localhost:3000',
 				changeOrigin: true,
 				secure: false,
-				// preserve cookie set by the API
-				configure: (proxy) => {
-					proxy.on('proxyRes', (proxyRes) => {
-						// helpful when debugging cookies during dev
-						console.log('Set-Cookie:', proxyRes.headers['set-cookie']);
-					});
-				},
 			},
 		},
 		hmr: {

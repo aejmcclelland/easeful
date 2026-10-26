@@ -6,9 +6,6 @@ const dotenv = require('dotenv');
 //Load env variables
 dotenv.config({ path: '../taskmanager-server/.env' });
 
-// Check if the MONGO_URI is loaded
-console.log('MONGO_URI:', process.env.MONGO_URI);
-
 //connect to DB
 mongoose.connect(process.env.MONGO_URI, {
 	useNewUrlParser: true,

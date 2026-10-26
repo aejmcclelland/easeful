@@ -1,75 +1,51 @@
-# React + TypeScript + Vite
+# Easeful frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19, TypeScript, and Vite frontend for Easeful. The Express API lives in
+`../easeful-server` and remains hosted separately on Render.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Use Node.js `24.10.0` and the repository's pnpm `10.20.0` declaration.
+From this directory:
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install --frozen-lockfile
+cp .env.example .env
+pnpm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If `.env` already exists, review it instead of overwriting it. The example points
+`VITE_API_URL` at `http://localhost:3000`; start the local API on port `3000`.
+The frontend runs at `http://localhost:3001`, which the API's CORS policy allows.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`VITE_API_URL` must be an API origin without an `/api` suffix. Endpoint paths are
+added by the client. An empty value uses same-origin `/api` requests through the
+Vite development proxy to port `3000`. This development proxy does not run on
+Cloudflare Pages; deployed builds need an explicit API origin. Keep credentials
+out of `VITE_*` variables, which are exposed in the browser build.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Checks and local build
+
+```bash
+pnpm run lint
+pnpm run build
+pnpm run preview
 ```
+
+The build runs TypeScript checking and emits static files to `dist`. Preview
+serves the compiled build; API access from its default origin is subject to the
+backend's existing CORS policy. No automated test script is currently configured.
+
+## Cloudflare Pages
+
+- Root directory: `easeful-client`
+- Build command: `pnpm run build`
+- Output directory: `dist`
+- `NODE_VERSION=24.10.0`
+- `PNPM_VERSION=10.20.0`
+- Production: `VITE_API_URL=https://api.easeful.amcclelland.net`
+
+`easeful.amcclelland.net` is the frontend hostname; the API hostname remains the
+Render backend. Deployment and DNS cutover are pending. See the
+[deployment notes](../docs/deployment-notes.md) for SPA routing, preview-origin
+limitations, and migration verification.
